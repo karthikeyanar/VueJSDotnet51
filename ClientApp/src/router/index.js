@@ -5,19 +5,19 @@ const routes = [{
         path: "/",
         name: "Home",
         component: () =>
-            import ('@/components/Home.vue')
+            import ('@/pages/Home.vue')
     },
     {
         path: "/Counter",
         name: "Counter",
         component: () =>
-            import ('@/components/Counter.vue')
+            import ('@/pages/Counter.vue')
     },  
     {
         path: "/Users",
         name: "Users",
         component: () =>
-            import ('@/components/Users.vue'),
+            import ('@/pages/Users.vue'),
         meta: { requiresAuth: true },
     }
 ];

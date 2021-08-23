@@ -190,7 +190,7 @@ namespace VueJSDotnet51.Controllers {
 
             DateTime expireDate = DateTime.UtcNow.AddSeconds(1800); //30 min
             if(isRememberMe){
-                expireDate = DateTime.UtcNow.AddSeconds(jwtBearerTokenSettings.ExpiryTimeInDays); //30 min
+                expireDate = DateTime.UtcNow.AddDays(jwtBearerTokenSettings.ExpiryTimeInDays); //30 min
             }
 
             var tokenDescriptor = new SecurityTokenDescriptor {

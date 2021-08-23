@@ -7,8 +7,8 @@
 
 <script>
 import NavMenu from '@/components/NavMenu.vue';
-import Login from '@/components/Login.vue';
-import Register from '@/components/Register.vue';
+import Login from '@/pages/Login.vue';
+import Register from '@/pages/Register.vue';
 import { mapActions } from "vuex";
 export default {
   name: 'App',
@@ -43,9 +43,5 @@ export default {
 </script>
 
 <style>
-#app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
+
 </style>
