@@ -58,11 +58,14 @@
             <tbody>
                 <tr v-for="row in rows" v-bind:key="row">
                     <template v-for="col in columns" v-bind:key="col">
-                        <template  v-if="$slots['row_'+col.name]">
-                            <slot :name="'row_' + col.name" :row="row" :index="index"></slot>
+                        <template v-if="$slots['row_'+col.name] && row.is_edit==false">
+                            <slot :name="'row_' + col.name" :col="col" :row="row" :index="index"></slot>
                         </template>
-                        <template  v-if="!$slots['row_'+col.name]">
-                            <td :class="col.row_css_object" :style="col.row_style_object">{{row[col.name]}}</td>
+                        <template  v-if="!$slots['row_'+col.name] && row.is_edit==false">
+                            <td style="cursor:pointer" @click="onEdit(row)" :class="col.row_css_object" :style="col.row_style_object">{{row[col.name]}}</td>
+                        </template>
+                        <template v-if="$slots['row_edit_'+col.name] && row.is_edit==true">
+                            <slot :name="'row_edit_' + col.name" :col="col" :row="row" :index="index"></slot>
                         </template>
                     </template>
                 </tr>
@@ -84,6 +87,7 @@
         emits: ["onRefresh"],
         data() {
            return {
+               before_rows: [],
                sort_name: this.$props.sort_name,
                sort_order: this.$props.sort_order,
                page_index: 1,
@@ -91,7 +95,43 @@
            }
         },
         methods: {
-            onRefresh: function() {
+            onEdit: function(row) {
+                row.is_edit = true;
+                row.bt_index = this.before_rows.length;
+                var br = Object.assign({}, row);
+                this.before_rows.push(br);
+                console.log(this.before_rows);
+            },
+            onSave: function(row) {
+                for(var i = 0;i<this.before_rows.length;i++){
+                    var br = this.before_rows[i];
+                    if(br.bt_index == row.bt_index) {
+                        this.before_rows.splice(i,1);
+                    }
+                } 
+                row.is_edit = false;
+                row.bt_index = -1;
+            },
+            onCancelEdit: function(row){
+                row.is_edit = false;
+                var br = null;
+                var i,j;
+                for(i = 0;i<this.before_rows.length;i++){
+                    br = this.before_rows[i];
+                    if(br.bt_index == row.bt_index) {
+                        for(j = 0;j<this.$props.rows.length;j++){
+                            if(this.$props.rows[j].bt_index == br.bt_index){
+                                br.is_edit=false;
+                                br.bt_index=-1;
+                                this.$props.rows.splice(j,1,Object.assign({}, br));
+                                break;
+                            }
+                        }
+                        this.before_rows.splice(i,1);
+                    }
+                } 
+            }
+            ,onRefresh: function() {
                 if(this.sort_order =='asc')
                     this.sort_order = 'desc';
                 else
