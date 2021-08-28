@@ -1,6 +1,13 @@
 <template>
 <div>
-   <bootstrap-table class_name="table table-bordered" :total="total" :rows="rows" :columns="columns" ref="bstable">
+   <bootstrap-table css="table table-bordered" sortname="name" sortorder="asc"
+   :rp="2" :page_options=[2,4,6] 
+   :refresh="onRefresh" 
+   :save="onSave" 
+   :total="total" 
+   :rows="rows" 
+   :columns="columns" 
+   ref="bstable">
      <template v-slot:row_edit_name="slotProps">
        <td :style="slotProps.col.row_style_object"><input type="text" v-model="slotProps.row.name" class="form-control form-control-sm" /></td>
      </template>
@@ -32,8 +39,11 @@ export default {
   },
   data() {
       return {
-          total: 2,
-          rows: [{'name':'karthi','number':'22323','is_edit':false},{'name':'raja','number':'31123','is_edit':false}],
+          total: 11,
+          rows: [
+            {'name':'karthi','number':'22323','is_edit':false}
+            ,{'name':'raja','number':'31123','is_edit':false}
+          ],
           columns: [
             {'name':'name','display_name':'Name','is_sort':true}
           ,{'name':'number','display_name':'Number','is_sort':false
@@ -49,6 +59,9 @@ export default {
   methods: {
     onRefresh: function(data){
       console.log('data=',data);
+    },
+    onSave:function(row){
+      console.log('onSave row=',row);
     }
   }
 }
