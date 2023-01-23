@@ -35,9 +35,22 @@ namespace api.Models
         }
         public string Symbol { get; set; }
         public DateTime RecordDate { get; set; }
-        public decimal NumberOfShares { get; set; }
-        public decimal SharePrice { get; set; }
-        public decimal Amount { get; set; }
+        public decimal? NumberOfShares { get; set; }
+        public decimal? SharePrice { get; set; }
+        public decimal? Amount { get; set; }
+        public decimal? PL { get; set; }
+        public decimal? PLPercent { get; set; }
+        public decimal? UnRealizedPL { get; set; }
+        public decimal? CurrentMarketValue { get; set; }
+        public decimal? XIRR {get;set;}
+        public decimal? CurrentPrice { get; set; }
+        public decimal? UnRealizedPLPercent
+        {
+            get
+            {
+                return ((this.Amount ?? 0) > 0 ? (this.UnRealizedPL / this.Amount) * 100 : 0);
+            }
+        }
     }
 
     public class DealXIRRReportModel

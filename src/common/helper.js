@@ -1,6 +1,6 @@
 
 import axios from 'axios';
-import accounting from 'accounting-js'; 
+import accounting from 'accounting-js';
 import moment from "moment";
 import $ from "jquery";
 export default {
@@ -79,9 +79,9 @@ export default {
         if (d == 0 && isAcceptZero == true) {
             return 0;
         } else {
-        if (d == 0) {
-            return "";
-        } else {
+            if (d == 0) {
+                return "";
+            } else {
                 var v = accounting.formatNumber(d, { precision: precision });
                 return v;
             }
@@ -98,7 +98,7 @@ export default {
         if (ty == "object")
             return "";
         var m = moment(d);
-        console.log('formatDate d=',d,',f=',f);
+        console.log('formatDate d=', d, ',f=', f);
         if (m.get('year') <= 1901)
             return "";
         else

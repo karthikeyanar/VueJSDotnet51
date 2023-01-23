@@ -1,0 +1,21 @@
+﻿INSERT INTO [dbo].[SecurityLotSharesHistoryOld]
+([DealID]
+,[SecurityTypeID]
+,[SecurityID]
+,[RecordDate]
+,[NumberOfSharesUnsold]
+,[Price]
+,[SecurityLotHistoryID]
+,[TransactionTypeID]
+,[TransactionRefID])
+VALUES
+(@DealID
+,@SecurityTypeID
+,@SecurityID
+,@RecordDate
+,@NumberOfSharesUnsold
+,@Price
+,@SecurityLotHistoryID
+,@TransactionTypeID
+,@TransactionRefID
+)

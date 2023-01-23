@@ -1,6 +1,6 @@
 import { createRouter,createWebHistory} from 'vue-router'
 import store from '../store';
-const templateName = 'default'
+const templateName = 'default';
 
 
 const router = createRouter({

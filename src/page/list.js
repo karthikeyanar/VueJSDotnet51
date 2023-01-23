@@ -5,7 +5,7 @@ export default {
         return {
             search: {
                 'pageIndex': 1,
-                'pageSize': 100,
+                'pageSize': 20,
                 'sortName': 'lot.RecordDate desc,lot.dm_asset_core_lot_id desc',
                 'sortOrder': '',
                 'total': 0,
@@ -13,16 +13,26 @@ export default {
                 'symbol': '',
                 'fromDate': '01/Jan/2020',
                 'toDate': '',
-                'isIgnore': false
+                'isIgnore': false,
+                'isOptions': false,
+                'isGold': false
             },
+            isTransaction: false,
             newjson: null,
             rows: [],
+            shares:[],
             xirr: 0,
             totalCapitalCall: 0,
             totalDividendCall: 0,
             totalInvestmentCall: 0,
             totalOptionsCall: 0,
-            totalDebtCall: 0
+            totalDebtCall: 0,
+            totalGold:0,
+            totalPL: 0,
+            totalUnRealizedPL: 0,
+            totalPLPercent: 0,
+            totalUnRealizedPLPercent: 0,
+            currentMarketValue:0
         }
     },
     methods: {
@@ -69,8 +79,37 @@ export default {
                     self.totalInvestmentCall = result.TotalInvestmentCall;
                     self.totalOptionsCall = result.TotalOptionsCall;
                     self.totalDebtCall = result.TotalDebtCall;
+                    self.totalGold = result.TotalGold;
+                    self.totalPL = result.TotalPL;
+                    self.totalUnRealizedPL = result.TotalUnRealizedPL;
+                    self.currentMarketValue = result.CurrentMarketValue;
+                    self.totalPLPercent = (self.totalPL / self.totalCapitalCall) * 100;
+                    self.totalUnRealizedPLPercent = (self.totalUnRealizedPL / self.totalCapitalCall) * 100;
                     self.search.total = result.total;
                     self.$refs.pagination.refresh();
+                    self.loadShares();
+                },
+                onError: function (error) {
+                    console.log("error=", error);
+                },
+            });
+        },
+        loadShares: function () {
+            var self = this;
+            var json = JSON.parse(JSON.stringify(self.search));
+            json.sortName = 'lot.XIRR';
+            json.sortOrder = 'asc';
+            json.pageSizeOptions = null;
+            json.isCurrent = true;
+            helper.ajax({
+                url: "api/Home/ListShare",
+                data: json,
+                onUnAuthorized: function () {
+                    console.log("onUnAuthorized");
+                    //window.location.href = '/login';
+                },
+                onSuccess: function (result) {
+                    self.shares = result;
                 },
                 onError: function (error) {
                     console.log("error=", error);

@@ -34,7 +34,9 @@ namespace api.Controllers
                 ,string symbol = ""
                 ,bool? isIgnore = false
                 ,DateTime? fromDate = null
-                ,DateTime? toDate = null)
+                ,DateTime? toDate = null
+                ,bool? isOptions = false
+                ,bool? isGold = false)
         {
             DateTime minDate = Convert.ToDateTime("01/01/1900");
             int totalRows = 0;
@@ -64,6 +66,14 @@ namespace api.Controllers
                     where += " and lot.Symbol in (" + symbol + ")" + Environment.NewLine;
                 }
             }
+            if ((isOptions ?? false) == true)
+            {
+                where += " and lot.Symbol like '%NIFTY%'" + Environment.NewLine;
+            }
+            if ((isGold ?? false) == true)
+            {
+                where += " and lot.Symbol like '%GOLD%'" + Environment.NewLine;
+            }
             string sql = "select isnull(count(*),0) as cnt from dm_asset_core_lot lot " + where + Environment.NewLine;
             using (SqlConnection connection = new SqlConnection(connectionString)) {
                 totalRows = (int)connection.ExecuteScalar(sql);
@@ -80,40 +90,97 @@ namespace api.Controllers
             using (SqlConnection connection = new SqlConnection(connectionString)) {
                 list = connection.Query<dm_asset_core_lot>(sql).ToList();
             }
-            double xirr = this.XIRR(symbol, isIgnore, fromDate, toDate);
-            List<dm_asset_core_lot_share> totalSharesList = this.ListShare();
+            double xirr = this.XIRR(symbol, isIgnore, fromDate, toDate,isOptions,isGold);
+            List<dm_asset_core_lot_share> totalSharesList = this.ListShare(symbol,isIgnore,isOptions,isGold);
             List<string> dividendSymbols = new List<string> { "PGINVIT-IV", "INDIGRID-IV", "RECLTD" };
             List<string> debtSymbols = new List<string> { "LIQUIDBEES" };
+            decimal? totalGold = (from q in totalSharesList where q.Symbol == "GOLD" select q.Amount).Sum();
             decimal? totalCapitalCall = (from q in totalSharesList select q.Amount).Sum();
             decimal? totalDividendCall = (from q in totalSharesList where dividendSymbols.Contains(q.Symbol) == true select q.Amount).Sum();
             decimal? totalInvestmentCall = (from q in totalSharesList 
                                             where dividendSymbols.Contains(q.Symbol) == false
                                             && debtSymbols.Contains(q.Symbol) == false
                                             && q.Symbol.Contains("NIFTY") == false
+                                            && q.Symbol.Contains("GOLD") == false
                                             select q.Amount).Sum();
             decimal? totalOptionsCall = (from q in totalSharesList
                                          where q.Symbol.Contains("NIFTY")==true
                                          select q.Amount).Sum();
+            decimal? totalPL = (from q in totalSharesList select (q.PL ?? 0)).Sum();
+            decimal? totalUnRealizedPL = (from q in totalSharesList
+                                          where q.NumberOfShares > 0
+                                          select (q.UnRealizedPL ?? 0)).Sum();
+            decimal? currentMarketValue = (from q in totalSharesList
+                                           where q.NumberOfShares > 0
+                                           select (q.CurrentMarketValue ?? 0)).Sum();
             decimal? totalDebtCall = (from q in totalSharesList where debtSymbols.Contains(q.Symbol) == true select q.Amount).Sum();
             return new { xirr = xirr
                 ,total = totalRows
-                , rows = list 
+                ,rows = list 
+                ,TotalGold = totalGold
                 ,TotalCapitalCall = totalCapitalCall
                 ,TotalDividendCall = totalDividendCall
                 ,TotalInvestmentCall = totalInvestmentCall
                 ,TotalOptionsCall = totalOptionsCall
                 ,TotalDebtCall = totalDebtCall
+                ,TotalPL = totalPL
+                ,TotalUnRealizedPL = totalUnRealizedPL
+                ,CurrentMarketValue = currentMarketValue
             };
         }
 
-        private List<dm_asset_core_lot_share> ListShare()
+        public List<dm_asset_core_lot_share> ListShare(string symbol = ""
+                , bool? isIgnore = false 
+                , bool? isOptions = false
+                , bool? isGold = false
+                , bool? isCurrent = false
+                , string sortName = ""
+                , string sortOrder = "")
         {
             string sql = "";
             DateTime minDate = Convert.ToDateTime("01/01/1900");
-            string where = ""; 
             sql = "select" + Environment.NewLine;
-            sql += " lot.* from dm_asset_core_lot_share lot" + Environment.NewLine;
+            sql += " lot.*,(select top 1 isnull(cp.SharePrice,0) as CurrentPrice from dm_asset_core_lot cp where cp.Symbol = lot.Symbol order by cp.RecordDate desc,cp.dm_asset_core_lot_id desc) as CurrentPrice from dm_asset_core_lot_share lot" + Environment.NewLine;
+            string where = "";
+            where += " where lot.Symbol != ''" + Environment.NewLine;
+            if (string.IsNullOrEmpty(symbol) == false)
+            {
+                symbol = Helper.ConvertStringSQLFormat(symbol);
+            }
+            if (string.IsNullOrEmpty(symbol) == false)
+            {
+                if ((isIgnore ?? false) == true)
+                {
+                    where += " and lot.Symbol not in (" + symbol + ")" + Environment.NewLine;
+                }
+                else
+                {
+                    where += " and lot.Symbol in (" + symbol + ")" + Environment.NewLine;
+                }
+            }
+            if ((isOptions ?? false) == true)
+            {
+                where += " and lot.Symbol like '%NIFTY%'" + Environment.NewLine;
+            }
+            if ((isGold ?? false) == true)
+            {
+                where += " and lot.Symbol like '%GOLD%'" + Environment.NewLine;
+            }
+            if ((isCurrent ?? false) == true)
+            {
+                where += " and lot.NumberOfShares > 0" + Environment.NewLine;
+            }
             sql += where + Environment.NewLine;
+            if (string.IsNullOrEmpty(sortName) == true)
+            {
+                sortName = "lot.XIRR";
+            }
+            if (string.IsNullOrEmpty(sortOrder) == true)
+            {
+                sortOrder = "asc";
+            }
+            sql += " order by " + sortName + " " + sortOrder;
+            Helper.Log(sql, "ListShare");
             List<dm_asset_core_lot_share> list;
             using (SqlConnection connection = new SqlConnection(connectionString))
             {
@@ -289,7 +356,9 @@ namespace api.Controllers
         private double XIRR(string symbol = ""
                 ,bool? isIgnore = false
                 ,DateTime? fromDate = null
-                ,DateTime? toDate = null)
+                ,DateTime? toDate = null
+                ,bool? isOptions = false
+                ,bool? isGold = false)
         {
             DateTime minDate = Convert.ToDateTime("01/01/1900");
             double xirr = 0;
@@ -318,11 +387,21 @@ namespace api.Controllers
                     where += " and lot.Symbol in (" + symbol + ")";
                 }
             }
+            if ((isOptions ?? false) == true)
+            {
+                where += " and lot.Symbol like '%NIFTY%'" + Environment.NewLine;
+            }
+            if ((isGold ?? false) == true)
+            {
+                where += " and lot.Symbol like '%GOLD%'" + Environment.NewLine;
+            }
             string sql = "select " + Environment.NewLine +
                         "lot.Symbol" + Environment.NewLine +
                         ",case when lot.LotType = 'B' then 'Buy' else case when lot.LotType = 'S' then 'Sell' else case when lot.LotType = 'D' then 'Dividend' else '' end end end as [Description]" + Environment.NewLine +
                         ",lot.RecordDate as [Date]" + Environment.NewLine +
-                        ",case when lot.LotType = 'B' then (lot.NumberOfShares * lot.SharePrice) * -1 else (lot.NumberOfShares * lot.SharePrice) end [Value]" + Environment.NewLine +
+                        ",case when lot.LotType = 'B'" + Environment.NewLine +
+                        " then (lot.NumberOfShares * lot.SharePrice) * -1 " + Environment.NewLine +
+                        " else case when lot.LotType = 'S' then (lot.NumberOfShares * lot.SharePrice) else lot.SharePrice end end [Value]" + Environment.NewLine +
                         ",0 as SortOrder" + Environment.NewLine +
                         "from dm_asset_core_lot lot" + Environment.NewLine +
                         where + 
@@ -334,6 +413,7 @@ namespace api.Controllers
                         ",isnull(sum(isnull(tbl.Shares, 0)), 0) as CurrentShares" + Environment.NewLine +
                         ",(select isnull(sum(isnull(tbl.Shares,0)),0) * (select top 1 l.SharePrice from dm_asset_core_lot l " + Environment.NewLine +
                         "where l.Symbol = tbl.Symbol" + Environment.NewLine +
+                        " and l.LotType not in ('D')" + Environment.NewLine +
                         "order by l.RecordDate desc,l.dm_asset_core_lot_id desc)) as [Value]" + Environment.NewLine +
                         "from (" + Environment.NewLine +
                         "select " + Environment.NewLine +

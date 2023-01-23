@@ -18,6 +18,9 @@ export default {
         formatNumber(v, decimalPlace, isAcceptZero) {
             return helper.formatNumber(v, decimalPlace, isAcceptZero);
         },
+        formatPercentage(v, decimalPlace, isAcceptZero) {
+            return helper.formatNumber(v, decimalPlace, isAcceptZero) + '%';
+        },
         formatDate(d, f) {
             return helper.formatDate(d, f);
         },
