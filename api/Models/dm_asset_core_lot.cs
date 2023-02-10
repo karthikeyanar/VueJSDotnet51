@@ -86,4 +86,43 @@ namespace api.Models
 
         public int? ID { get; set; }
     }
+
+    public class AllocationList
+    {
+        public AllocationList()
+        {
+            this.Symbol = "";
+            this.Total = 0;
+            this.Price = 0;
+            this.CurrentShares = 0;
+            this.RequireShares = 0;
+            this.Balance = 0;
+            this.Percentage = 0;
+        }
+        public string Symbol { get; set; }
+        public decimal? Total { get; set; }
+        public decimal? Price { get; set; }
+        public decimal? CurrentShares { get; set; }
+        public decimal? RequireShares { get; set; }
+        public decimal? Balance { get; set; }
+        public decimal? Percentage { get; set; }
+    }
+
+    public class CurrentIndexValue {
+        public decimal? Total {get;set;}
+        public decimal? Current {get;set;}
+        public decimal? PL {get;set;}
+        public decimal? PLPercent {get;set;}
+    }
+
+    public class IndexList {
+        public int ID {get;set;}
+        public int dm_asset_core_index_id {get;set;}
+        public string Name {get;set;}
+        public decimal? TotalAmount {get;set;}
+        public decimal? CurrentAmount {get;set;}
+        public decimal? PL {get;set;}
+        public decimal? PLPercent {get;set;}
+    }
+
 }

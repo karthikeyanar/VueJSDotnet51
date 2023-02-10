@@ -72,7 +72,7 @@ namespace PepperExcelImport
                                         case "PROVOGE-BE": symbol = "PROVOGE"; break;
                                     }
                                     string action = csv[csvHeader.GetIndex("Trade Type")].Trim().ToLower();
-                                    int numberOfShares = DataTypeHelper.ToInt32(csv[csvHeader.GetIndex("Quantity")].Trim());
+                                    decimal numberOfShares = DataTypeHelper.ToDecimal(csv[csvHeader.GetIndex("Quantity")].Trim());
                                     decimal price = DataTypeHelper.ToDecimal(csv[csvHeader.GetIndex("Price")].Trim());
                                     DateTime date = DataTypeHelper.ToDateTime(csv[csvHeader.GetIndex("Trade Date")].Trim());
                                     string transactionId = csv[csvHeader.GetIndex("Trade ID")].Trim();
@@ -95,7 +95,15 @@ namespace PepperExcelImport
                                     {
                                         symbol = "GOLD";
                                     }
-                                    CreateAssetCore(symbol, date, numberOfShares, price, transactionId, lotType);
+                                    if (symbol.StartsWith("LIQUIDBEES") == true)
+                                    {
+                                        symbol = "LIQUIDBEES";
+                                    }
+                                    if (symbol.Contains("NASDAQ") == true)
+                                    {
+                                        symbol = "NASDAQ";
+                                    }
+                                CreateAssetCore(symbol, date, numberOfShares, price, transactionId, lotType);
                                     Console.WriteLine(i);
                                 }
                             }
@@ -104,24 +112,33 @@ namespace PepperExcelImport
                     }
                 }
 
-                Console.WriteLine("Execute Store Procedure please wait");
-                sql = "exec PROC_dm_asset_core_lot_share";
-                using (SqlConnection connection = new SqlConnection(_ConnectionString))
-                {
-                    connection.Execute(sql);
-                }
+                //Console.WriteLine("Execute Store Procedure please wait");
+                //sql = "exec PROC_dm_asset_core_lot_share";
+                //using (SqlConnection connection = new SqlConnection(_ConnectionString))
+                //{
+                //    connection.Execute(sql);
+                //}
             
         }
 
         public static void ImportAllocation()
         {
-
             string sql = "";
             string rootPath = System.Configuration.ConfigurationManager.AppSettings["RootPath"];
             string updateFolder = "allocation";
             string filesFolder = Path.Combine(rootPath, updateFolder);
             string[] files = System.IO.Directory.GetFiles(filesFolder);
             int i = 0;
+            if (files.Length > 0)
+            {
+                using (SqlConnection connection = new SqlConnection(_ConnectionString))
+                {
+                    sql = "delete from dm_asset_core_symbol_index";
+                    connection.Execute(sql, new
+                    {
+                    });
+                }
+            }
             foreach (string filePath in files)
             {
                 // Start ImportDealUnderlyingDirect
@@ -154,6 +171,22 @@ namespace PepperExcelImport
                             else
                             {
                                 string symbol = csv[csvHeader.GetIndex("Symbol")].Trim();
+                                if (symbol.StartsWith("NIFTY") == true)
+                                {
+                                    symbol = "NIFTY";
+                                }
+                                if (symbol.StartsWith("SGB") == true)
+                                {
+                                    symbol = "GOLD";
+                                }
+                                if (symbol.StartsWith("LIQUIDBEES") == true)
+                                {
+                                    symbol = "LIQUIDBEES";
+                                }
+                                if (symbol.Contains("NASDAQ") == true)
+                                {
+                                    symbol = "NASDAQ";
+                                }
                                 decimal percentage = DataTypeHelper.ToDecimal(csv[csvHeader.GetIndex("Percentage")].Trim());
                                 string indexName = csv[csvHeader.GetIndex("Index")].Trim();
                                 sql = "INSERT INTO [dbo].[dm_asset_core_symbol] ([Symbol]) VALUES (@Symbol)";
@@ -201,6 +234,106 @@ namespace PepperExcelImport
                                     {
                                         throw new Exception("Index name does not exist");
                                     }
+                                }
+                                Console.WriteLine(i);
+                            }
+                        }
+                    }
+                    System.IO.File.Delete(filePath);
+                }
+            }
+        }
+
+        public static void ImportAverage()
+        {
+            string sql = "";
+            string rootPath = System.Configuration.ConfigurationManager.AppSettings["RootPath"];
+            string updateFolder = "average";
+            string filesFolder = Path.Combine(rootPath, updateFolder);
+            string[] files = System.IO.Directory.GetFiles(filesFolder);
+            int i = 0;
+            if(files.Length > 0)
+            {
+                using (SqlConnection connection = new SqlConnection(_ConnectionString))
+                {
+                    sql = "delete from dm_asset_core_lot_share";
+                    connection.Execute(sql, new
+                    {
+                    });
+                }
+            }
+            foreach (string filePath in files)
+            {
+                // Start ImportDealUnderlyingDirect
+                if (filePath.ToLower().Contains(".csv") == true)
+                {
+                    using (TextReader reader = System.IO.File.OpenText(filePath))
+                    {
+                        CSVHeaderHelper csvHeader = new CSVHeaderHelper();
+                        CsvReader csv = null;
+                        csv = new CsvReader(reader);
+                        i = 0;
+                        while (csv.Read())
+                        {
+                            i += 1;
+                            if (i == 1)
+                            {
+                                int j;
+                                for (j = 0; j < 100; j++)
+                                {
+                                    try
+                                    {
+                                        csvHeader.Headers.Add(new CSVHeader { Name = csv[j], Index = j });
+                                    }
+                                    catch
+                                    {
+                                        break;
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                string symbol = csv[csvHeader.GetIndex("Symbol")].Trim();
+                                decimal quantity = DataTypeHelper.ToDecimal(csv[csvHeader.GetIndex("Quantity Available")].Trim());
+                                decimal avgprice = DataTypeHelper.ToDecimal(csv[csvHeader.GetIndex("Average Price")].Trim());
+                                decimal amount = quantity * avgprice;
+                                if (symbol.StartsWith("NIFTY") == true)
+                                {
+                                    symbol = "NIFTY";
+                                }
+                                if (symbol.StartsWith("SGB") == true)
+                                {
+                                    symbol = "GOLD";
+                                }
+                                if (symbol.StartsWith("LIQUIDBEES") == true)
+                                {
+                                    symbol = "LIQUIDBEES";
+                                }
+                                if (symbol.Contains("NASDAQ") == true)
+                                {
+                                    symbol = "NASDAQ";
+                                }
+                                using (SqlConnection connection = new SqlConnection(_ConnectionString))
+                                {
+                                    sql = "INSERT INTO [dbo].[dm_asset_core_lot_share]" + Environment.NewLine +
+                                                 "([Symbol]" + Environment.NewLine +
+                                                 ",[NumberOfShares]" + Environment.NewLine +
+                                                 ",[SharePrice]" + Environment.NewLine +
+                                                 ",[Amount]" + Environment.NewLine +
+                                                 ")" + Environment.NewLine +
+                                                 " VALUES " + Environment.NewLine +
+                                                 "(@Symbol" + Environment.NewLine +
+                                                 ",@Shares" + Environment.NewLine +
+                                                 ",@Price" + Environment.NewLine +
+                                                 ",@Amount)" + Environment.NewLine +
+                                                 "";
+                                    connection.Execute(sql, new
+                                    {
+                                        Symbol = symbol,
+                                        Shares = quantity,
+                                        Price = avgprice,
+                                        Amount = amount
+                                    });
                                 }
                                 Console.WriteLine(i);
                             }
@@ -296,7 +429,7 @@ namespace PepperExcelImport
                         ") as tbl " + Environment.NewLine +
                         "group by tbl.Symbol" + Environment.NewLine +
                         ") as tbl2 where isnull(tbl2.CurrentShares,0) > 0" + Environment.NewLine +
-                        ") as tbl3 group by tbl3.[Date]" + Environment.NewLine +
+                        ") as tbl3 group by tbl3.[Date] order by [Date] asc" + Environment.NewLine +
                         "";
             List<DealXIRRReportModel> rows = new List<DealXIRRReportModel>();
             using (var connection = new SqlConnection(_ConnectionString))

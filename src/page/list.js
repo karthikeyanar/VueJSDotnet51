@@ -15,7 +15,12 @@ export default {
                 'toDate': '',
                 'isIgnore': false,
                 'isOptions': false,
-                'isGold': false
+                'isGold': false,
+                'tradeType':''
+            },
+            listSearch: {
+                'sortName': 'PL',
+                'sortOrder': 'asc',
             },
             isTransaction: false,
             newjson: null,
@@ -32,14 +37,20 @@ export default {
             totalUnRealizedPL: 0,
             totalPLPercent: 0,
             totalUnRealizedPLPercent: 0,
-            currentMarketValue:0
+            currentMarketValue:0,
+            allocationAmount:0,
+            allocationList: [],
+            isShowAllocation: false,
+            indexList:[]
         }
     },
     methods: {
         init: function () {
             var self = this;
             self.getNew(function () {
-                self.load();
+                self.load(function () {
+                    self.allocationAmount = self.totalInvestmentCall;
+                });
             });
         },
         getNew: function (callback) {
@@ -60,7 +71,7 @@ export default {
                 },
             });
         },
-        load: function () {
+        load: function (callback) {
             var self = this;
             var json = JSON.parse(JSON.stringify(self.search));
             json.pageSizeOptions = null;
@@ -86,19 +97,24 @@ export default {
                     self.totalPLPercent = (self.totalPL / self.totalCapitalCall) * 100;
                     self.totalUnRealizedPLPercent = (self.totalUnRealizedPL / self.totalCapitalCall) * 100;
                     self.search.total = result.total;
+                    self.indexList = result.indexList;
                     self.$refs.pagination.refresh();
                     self.loadShares();
+                    try {
+                        if (callback)
+                            callback();
+                    } catch (ex) { console.log(ex); }
                 },
                 onError: function (error) {
                     console.log("error=", error);
                 },
             });
-        },
+        }, 
         loadShares: function () {
             var self = this;
             var json = JSON.parse(JSON.stringify(self.search));
-            json.sortName = 'lot.XIRR';
-            json.sortOrder = 'asc';
+            json.sortName = self.listSearch.sortName;
+            json.sortOrder = self.listSearch.sortOrder;
             json.pageSizeOptions = null;
             json.isCurrent = true;
             helper.ajax({
@@ -110,6 +126,24 @@ export default {
                 },
                 onSuccess: function (result) {
                     self.shares = result;
+                },
+                onError: function (error) {
+                    console.log("error=", error);
+                },
+            });
+        },
+        loadAllocation: function (callback) {
+            var self = this;
+            helper.ajax({
+                url: "api/Home/AllocationList?totalAmount=" + self.allocationAmount,
+                onUnAuthorized: function () {
+                    console.log("onUnAuthorized");
+                    //window.location.href = '/login';
+                },
+                onSuccess: function (result) {
+                     self.allocationList = result;
+                     if(callback)
+                        callback();
                 },
                 onError: function (error) {
                     console.log("error=", error);

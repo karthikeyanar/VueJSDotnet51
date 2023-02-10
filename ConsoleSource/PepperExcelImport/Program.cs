@@ -27,6 +27,7 @@ namespace PepperExcelImport {
         static void Main(string[] args) {
 			ImportDealUnderlyingDirect.Import();
             ImportDealUnderlyingDirect.ImportAllocation();
+            ImportDealUnderlyingDirect.ImportAverage();
             ImportDealUnderlyingDirect.CalculateXIRR();
             Console.WriteLine("Press any key to continue........");
 			Console.ReadLine();

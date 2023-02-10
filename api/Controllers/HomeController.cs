@@ -36,7 +36,8 @@ namespace api.Controllers
                 ,DateTime? fromDate = null
                 ,DateTime? toDate = null
                 ,bool? isOptions = false
-                ,bool? isGold = false)
+                ,bool? isGold = false
+                ,string tradeType = "")
         {
             DateTime minDate = Convert.ToDateTime("01/01/1900");
             int totalRows = 0;
@@ -74,6 +75,11 @@ namespace api.Controllers
             {
                 where += " and lot.Symbol like '%GOLD%'" + Environment.NewLine;
             }
+            if (string.IsNullOrEmpty(tradeType) == false)
+            {
+                tradeType = Helper.ConvertStringSQLFormat(tradeType);
+                where += " and lot.LotType in (" + tradeType + ")" + Environment.NewLine;
+            }
             string sql = "select isnull(count(*),0) as cnt from dm_asset_core_lot lot " + where + Environment.NewLine;
             using (SqlConnection connection = new SqlConnection(connectionString)) {
                 totalRows = (int)connection.ExecuteScalar(sql);
@@ -92,8 +98,14 @@ namespace api.Controllers
             }
             double xirr = this.XIRR(symbol, isIgnore, fromDate, toDate,isOptions,isGold);
             List<dm_asset_core_lot_share> totalSharesList = this.ListShare(symbol,isIgnore,isOptions,isGold);
-            List<string> dividendSymbols = new List<string> { "PGINVIT-IV", "INDIGRID-IV", "RECLTD" };
-            List<string> debtSymbols = new List<string> { "LIQUIDBEES" };
+            List<string> dividendSymbols = new List<string> { };//"PGINVIT-IV", "INDIGRID-IV", "RECLTD" };
+            List<string> debtSymbols = new List<string> { "LIQUIDBEES", "LIQUIDBEES-F" };
+            totalSharesList = (from q in totalSharesList
+                               where debtSymbols.Contains(q.Symbol) == false
+                               && q.Symbol.Contains("NIFTY") == false
+                               && q.Symbol.Contains("GOLD") == false
+                               select q).ToList();
+            
             decimal? totalGold = (from q in totalSharesList where q.Symbol == "GOLD" select q.Amount).Sum();
             decimal? totalCapitalCall = (from q in totalSharesList select q.Amount).Sum();
             decimal? totalDividendCall = (from q in totalSharesList where dividendSymbols.Contains(q.Symbol) == true select q.Amount).Sum();
@@ -114,6 +126,21 @@ namespace api.Controllers
                                            where q.NumberOfShares > 0
                                            select (q.CurrentMarketValue ?? 0)).Sum();
             decimal? totalDebtCall = (from q in totalSharesList where debtSymbols.Contains(q.Symbol) == true select q.Amount).Sum();
+
+            sql = "exec [PROC_CALC_dm_asset_core_index]";
+            CurrentIndexValue currentIndexValue;
+            List<IndexList> indexList;
+            using (SqlConnection connection = new SqlConnection(connectionString)) {
+                using (var multi = connection.QueryMultiple(sql))
+                {
+                    currentIndexValue = multi.Read<CurrentIndexValue>().FirstOrDefault();
+                    indexList = multi.Read<IndexList>().ToList();
+                }
+            }
+            totalCapitalCall = currentIndexValue.Total;
+            totalInvestmentCall = currentIndexValue.Total;
+            currentMarketValue = currentIndexValue.Current;
+            totalPL = currentIndexValue.PL;
             return new { xirr = xirr
                 ,total = totalRows
                 ,rows = list 
@@ -124,10 +151,13 @@ namespace api.Controllers
                 ,TotalOptionsCall = totalOptionsCall
                 ,TotalDebtCall = totalDebtCall
                 ,TotalPL = totalPL
+                ,TotalPLPercent = currentIndexValue.PLPercent
                 ,TotalUnRealizedPL = totalUnRealizedPL
                 ,CurrentMarketValue = currentMarketValue
+                ,indexList = indexList
             };
         }
+
 
         public List<dm_asset_core_lot_share> ListShare(string symbol = ""
                 , bool? isIgnore = false 
@@ -140,7 +170,16 @@ namespace api.Controllers
             string sql = "";
             DateTime minDate = Convert.ToDateTime("01/01/1900");
             sql = "select" + Environment.NewLine;
-            sql += " lot.*,(select top 1 isnull(cp.SharePrice,0) as CurrentPrice from dm_asset_core_lot cp where cp.Symbol = lot.Symbol order by cp.RecordDate desc,cp.dm_asset_core_lot_id desc) as CurrentPrice from dm_asset_core_lot_share lot" + Environment.NewLine;
+            sql += " lot.Symbol" + Environment.NewLine +
+                    ",lot.NumberOfShares" + Environment.NewLine +
+                    ",lot.SharePrice" + Environment.NewLine +
+                    ",lot.Amount" + Environment.NewLine +
+                    ",lot.XIRR" + Environment.NewLine +
+                    ",(lot.NumberOfShares * (select top 1 isnull(cp.SharePrice,0) as CurrentPrice from dm_asset_core_lot cp where cp.Symbol = lot.Symbol and cp.LotType != 'D' order by cp.RecordDate desc,cp.dm_asset_core_lot_id desc)) as CurrentMarketValue" + Environment.NewLine +
+                    ",(select top 1 isnull(cp.SharePrice,0) as CurrentPrice from dm_asset_core_lot cp where cp.Symbol = lot.Symbol and cp.LotType != 'D' order by cp.RecordDate desc,cp.dm_asset_core_lot_id desc) as CurrentPrice " + Environment.NewLine +
+                    ",((lot.NumberOfShares * (select top 1 isnull(cp.SharePrice,0) as CurrentPrice from dm_asset_core_lot cp where cp.Symbol = lot.Symbol and cp.LotType != 'D' order by cp.RecordDate desc,cp.dm_asset_core_lot_id desc)) - (lot.NumberOfShares * lot.SharePrice)) as PL" + Environment.NewLine +
+                    ",(((lot.NumberOfShares * (select top 1 isnull(cp.SharePrice,0) as CurrentPrice from dm_asset_core_lot cp where cp.Symbol = lot.Symbol and cp.LotType != 'D' order by cp.RecordDate desc,cp.dm_asset_core_lot_id desc)) - (lot.NumberOfShares * lot.SharePrice)) / (lot.NumberOfShares * lot.SharePrice)) * 100 as PLPercent" + Environment.NewLine +
+                    " from dm_asset_core_lot_share lot" + Environment.NewLine;
             string where = "";
             where += " where lot.Symbol != ''" + Environment.NewLine;
             if (string.IsNullOrEmpty(symbol) == false)
@@ -158,34 +197,52 @@ namespace api.Controllers
                     where += " and lot.Symbol in (" + symbol + ")" + Environment.NewLine;
                 }
             }
-            if ((isOptions ?? false) == true)
-            {
-                where += " and lot.Symbol like '%NIFTY%'" + Environment.NewLine;
-            }
-            if ((isGold ?? false) == true)
-            {
-                where += " and lot.Symbol like '%GOLD%'" + Environment.NewLine;
-            }
-            if ((isCurrent ?? false) == true)
-            {
-                where += " and lot.NumberOfShares > 0" + Environment.NewLine;
-            }
+            //if ((isOptions ?? false) == true)
+            //{
+            //    where += " and lot.Symbol like '%NIFTY%'" + Environment.NewLine;
+            //}
+            //if ((isGold ?? false) == true)
+            //{
+            //    where += " and lot.Symbol like '%GOLD%'" + Environment.NewLine;
+            //}
+            //if ((isCurrent ?? false) == true)
+            //{
+            where += " and lot.NumberOfShares >= 1" + Environment.NewLine;
+            where += " and lot.Symbol not like '%GOLD%'" + Environment.NewLine;
+            where += " and lot.Symbol not like '%NIFTY%'" + Environment.NewLine;
+            where += " and lot.Symbol not like '%LIQUIDBEES%'" + Environment.NewLine;
+            //}
             sql += where + Environment.NewLine;
             if (string.IsNullOrEmpty(sortName) == true)
             {
-                sortName = "lot.XIRR";
+                sortName = "PLPercent";
             }
             if (string.IsNullOrEmpty(sortOrder) == true)
             {
                 sortOrder = "asc";
             }
-            sql += " order by " + sortName + " " + sortOrder;
+            sql = "select * from (" + sql + ") as tbl " + " order by " + sortName + " " + sortOrder;
             Helper.Log(sql, "ListShare");
             List<dm_asset_core_lot_share> list;
             using (SqlConnection connection = new SqlConnection(connectionString))
             {
                 list = connection.Query<dm_asset_core_lot_share>(sql).ToList();
             }
+            return list;
+        }
+
+        public List<AllocationList> AllocationList(decimal totalAmount)
+        {
+            string sql = "exec PROC_dm_asset_core_partition " + totalAmount.ToString() + Environment.NewLine;
+            Helper.Log(sql, "AllocationList");
+            List<AllocationList> list;
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            {
+                list = connection.Query<AllocationList>(sql).ToList();
+            }
+            list = (from q in list
+                    orderby q.Balance descending
+                    select q).ToList();
             return list;
         }
 
@@ -397,7 +454,7 @@ namespace api.Controllers
             }
             string sql = "select " + Environment.NewLine +
                         "lot.Symbol" + Environment.NewLine +
-                        ",case when lot.LotType = 'B' then 'Buy' else case when lot.LotType = 'S' then 'Sell' else case when lot.LotType = 'D' then 'Dividend' else '' end end end as [Description]" + Environment.NewLine +
+                        ",case when lot.LotType = 'B' then 'Buy' else case when lot.LotType = 'S' then 'Sell' else case when lot.LotType = 'D' then 'Dividend' else case when lot.LotType = 'E' then 'Expenses' else '' end end end end as [Description]" + Environment.NewLine +
                         ",lot.RecordDate as [Date]" + Environment.NewLine +
                         ",case when lot.LotType = 'B'" + Environment.NewLine +
                         " then (lot.NumberOfShares * lot.SharePrice) * -1 " + Environment.NewLine +
@@ -405,7 +462,7 @@ namespace api.Controllers
                         ",0 as SortOrder" + Environment.NewLine +
                         "from dm_asset_core_lot lot" + Environment.NewLine +
                         where + 
-                        "and lot.LotType in ('B','S','D') " + Environment.NewLine +
+                        "and lot.LotType in ('B','S','D','E') " + Environment.NewLine +
                         "union all " + Environment.NewLine +
                         "select '' as Symbol,'Current Market Value' as [Description],[Date],sum(isnull([Value], 0)) as [Value],1 as SortOrder from (" + Environment.NewLine +
                         "select Symbol as Symbol, '' as [Description], GETDATE() as [Date],[Value], 1 as SortOrder from(" + Environment.NewLine +
@@ -413,7 +470,7 @@ namespace api.Controllers
                         ",isnull(sum(isnull(tbl.Shares, 0)), 0) as CurrentShares" + Environment.NewLine +
                         ",(select isnull(sum(isnull(tbl.Shares,0)),0) * (select top 1 l.SharePrice from dm_asset_core_lot l " + Environment.NewLine +
                         "where l.Symbol = tbl.Symbol" + Environment.NewLine +
-                        " and l.LotType not in ('D')" + Environment.NewLine +
+                        " and l.LotType not in ('D','E')" + Environment.NewLine +
                         "order by l.RecordDate desc,l.dm_asset_core_lot_id desc)) as [Value]" + Environment.NewLine +
                         "from (" + Environment.NewLine +
                         "select " + Environment.NewLine +
@@ -424,7 +481,7 @@ namespace api.Controllers
                         ") as tbl " + Environment.NewLine +
                         "group by tbl.Symbol" + Environment.NewLine +
                         ") as tbl2 where isnull(tbl2.CurrentShares,0) > 0" + Environment.NewLine +
-                        ") as tbl3 group by tbl3.[Date]" + Environment.NewLine +
+                        ") as tbl3 group by tbl3.[Date] order by [Date] asc" + Environment.NewLine +
                         "";
             Helper.Log(sql, "XIRR");
             List<DealXIRRReportModel> rows = new List<DealXIRRReportModel>();
