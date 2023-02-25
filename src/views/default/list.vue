@@ -56,10 +56,11 @@
 						<th>Symbol</th>
 						<th style="text-align:right;">Total</th>
 						<th style="text-align:right;">Price</th>
-						<th style="text-align:right;">Current Shares</th>
 						<th style="text-align:right;">Require Shares</th>
-						<th style="text-align:right;">Balance</th>
+						<th style="text-align:right;">Current Shares</th>
+						<th style="text-align:right;">Balance Shares</th>
 						<th style="text-align:right;">Percentage</th>
+						<th style="text-align:right;">Balance Amount</th>
 					</tr>
 				</thead>
 				<tbody>
@@ -68,10 +69,11 @@
 							<td>{{row.Symbol}}</td>
 							<td style="text-align:right;">{{formatNumber(row.Total)}}</td>
 							<td style="text-align:right;">{{formatNumber(row.Price)}}</td>
-							<td style="text-align:right;">{{formatNumber(row.CurrentShares)}}</td>
 							<td style="text-align:right;">{{formatNumber(row.RequireShares)}}</td>
+							<td style="text-align:right;">{{formatNumber(row.CurrentShares)}}</td>
 							<td style="text-align:right;">{{formatNumber(row.Balance)}}</td>
 							<td style="text-align:right;">{{formatPercentage(row.Percentage)}}</td>
+							<td style="text-align:right;">{{formatNumber(row.Balance * row.Price)}}</td>
 						</tr>
 					</template>
 				</tbody>
@@ -133,10 +135,11 @@
 			<table v-if="isTransaction==false" class="table table-striped table-hover">
 				<thead>
 					<tr>
-						<th >Symbol</th>
+						<th>Symbol</th>
 						<th style="text-align:right;">PL</th>
 						<th style="text-align:right;">XIRR</th>
 						<th style="text-align:right;">Shares</th>
+						<th style="text-align:right;">LTCG Shares</th>
 						<th style="text-align:right;">Avg.Price</th>
 						<th style="text-align:right;">Current Price</th>
 						<th style="text-align:right;">Amount</th>
@@ -150,6 +153,7 @@
 							<td style="text-align:right;">{{formatPercentage(row.PLPercent)}}&nbsp;({{formatNumber(row.PL)}})</td>
 							<td style="text-align:right;">{{formatNumber(row.XIRR)}}</td>
 							<td style="text-align:right;">{{formatNumber(row.NumberOfShares)}}</td>
+							<td style="text-align:right;">{{formatNumber(row.LTCGShares)}}</td>
 							<td style="text-align:right;">{{formatNumber(row.SharePrice)}}</td>
 							<td style="text-align:right;">{{formatNumber(row.CurrentPrice)}}</td>
 							<td style="text-align:right;">{{formatNumber(row.Amount)}}</td>

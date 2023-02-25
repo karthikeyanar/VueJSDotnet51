@@ -51,6 +51,7 @@ namespace api.Models
                 return ((this.Amount ?? 0) > 0 ? (this.UnRealizedPL / this.Amount) * 100 : 0);
             }
         }
+        public decimal? LTCGShares { get; set; }
     }
 
     public class DealXIRRReportModel

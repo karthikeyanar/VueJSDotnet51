@@ -167,9 +167,32 @@ namespace api.Controllers
                 , string sortName = ""
                 , string sortOrder = "")
         {
+            string declareSQL = "";
             string sql = "";
             DateTime minDate = Convert.ToDateTime("01/01/1900");
-            sql = "select" + Environment.NewLine;
+
+            declareSQL += "declare @TempSymbol as Table" + Environment.NewLine +
+                    "(" + Environment.NewLine +
+                    "ID INT IDENTITY(1, 1)," + Environment.NewLine +
+                    "Symbol varchar(200)," + Environment.NewLine +
+                    "LTCGShares decimal(19,8)" + Environment.NewLine +
+                    "); " + Environment.NewLine +
+                    "insert into @TempSymbol(Symbol,LTCGShares)" + Environment.NewLine +
+                    "select tbl.Symbol,sum(tbl.LTCGShares) as LTCGShares from (" + Environment.NewLine +
+                    "select lot.Symbol, " + Environment.NewLine +
+                    "lot.dm_asset_core_lot_id,lot.RecordDate,lot.NumberOfShares,lot.SharePrice" + Environment.NewLine +
+                    ",lot.LotType " + Environment.NewLine +
+                    ",lot.BalanceShares" + Environment.NewLine +
+                    ",lot.AvgPrice" + Environment.NewLine +
+                    ",case when DATEADD(YEAR, 1, lot.RecordDate) < getdate() and lot.BalanceShares > 0 then " + Environment.NewLine +
+                    "case when lot.LotType = 'B' then lot.NumberOfShares else lot.NumberOfShares * -1 end else 0 end as LTCGShares " + Environment.NewLine +
+                    "from dm_asset_core_lot lot" + Environment.NewLine +
+                    "where lot.LotType in ('B','S') " + Environment.NewLine +
+                    "and BalanceShares > 0 " + Environment.NewLine +
+                    ") as tbl " + Environment.NewLine +
+                    "group by tbl.Symbol " + Environment.NewLine +
+                    "";
+            sql += "select" + Environment.NewLine;
             sql += " lot.Symbol" + Environment.NewLine +
                     ",lot.NumberOfShares" + Environment.NewLine +
                     ",lot.SharePrice" + Environment.NewLine +
@@ -179,7 +202,10 @@ namespace api.Controllers
                     ",(select top 1 isnull(cp.SharePrice,0) as CurrentPrice from dm_asset_core_lot cp where cp.Symbol = lot.Symbol and cp.LotType != 'D' order by cp.RecordDate desc,cp.dm_asset_core_lot_id desc) as CurrentPrice " + Environment.NewLine +
                     ",((lot.NumberOfShares * (select top 1 isnull(cp.SharePrice,0) as CurrentPrice from dm_asset_core_lot cp where cp.Symbol = lot.Symbol and cp.LotType != 'D' order by cp.RecordDate desc,cp.dm_asset_core_lot_id desc)) - (lot.NumberOfShares * lot.SharePrice)) as PL" + Environment.NewLine +
                     ",(((lot.NumberOfShares * (select top 1 isnull(cp.SharePrice,0) as CurrentPrice from dm_asset_core_lot cp where cp.Symbol = lot.Symbol and cp.LotType != 'D' order by cp.RecordDate desc,cp.dm_asset_core_lot_id desc)) - (lot.NumberOfShares * lot.SharePrice)) / (lot.NumberOfShares * lot.SharePrice)) * 100 as PLPercent" + Environment.NewLine +
-                    " from dm_asset_core_lot_share lot" + Environment.NewLine;
+                    ",ts.LTCGShares" + Environment.NewLine +
+                    " from dm_asset_core_lot_share lot" + Environment.NewLine +
+                    " join @TempSymbol ts on ts.Symbol = lot.Symbol" + Environment.NewLine +
+                    "";
             string where = "";
             where += " where lot.Symbol != ''" + Environment.NewLine;
             if (string.IsNullOrEmpty(symbol) == false)
@@ -221,7 +247,7 @@ namespace api.Controllers
             {
                 sortOrder = "asc";
             }
-            sql = "select * from (" + sql + ") as tbl " + " order by " + sortName + " " + sortOrder;
+            sql = declareSQL + Environment.NewLine + "select * from (" + sql + ") as tbl " + " order by " + sortName + " " + sortOrder;
             Helper.Log(sql, "ListShare");
             List<dm_asset_core_lot_share> list;
             using (SqlConnection connection = new SqlConnection(connectionString))
