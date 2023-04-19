@@ -32,14 +32,14 @@
 						<option value="D">Dividend</option>
 					</select>
 				</div><div class="clearfix">&nbsp;</div><br/>
-				<div class="float-start mt-2" style="width:auto;">
+				<div class="float-start mt-2" style="width:auto;display:none;">
 					<input type="checkbox" v-model="search.isOptions" v-on:change="load" />&nbsp;Options
 				</div>
 				<!--<div class="float-start mt-2" style="width:auto;margin-left:25px;">
 					<input type="checkbox" v-model="search.isGold" v-on:change="load" />&nbsp;Gold
 				</div>-->
 				<div class="float-start mt-2" style="width:auto;margin-left:25px;">
-					<input type="number" class="form-control" v-model="allocationAmount" v-on:change="loadAllocation" placeholder="Allocation Amount" />
+					Amount<input type="number" class="form-control" v-model="allocationAmount" v-on:change="loadAllocation" placeholder="Allocation Amount" />
 				</div>
 				<div class="float-start mt-2" style="width:auto;margin-left:25px;">
 					<input type="checkbox" v-model="isShowAllocation" v-on:change="loadAllocation" />&nbsp;Allocation
@@ -137,7 +137,6 @@
 					<tr>
 						<th>Symbol</th>
 						<th style="text-align:right;">PL</th>
-						<th style="text-align:right;">XIRR</th>
 						<th style="text-align:right;">Shares</th>
 						<th style="text-align:right;">LTCG Shares</th>
 						<th style="text-align:right;">Avg.Price</th>
@@ -151,7 +150,6 @@
 						<tr v-if="cBool(row.IsEdit)==false">
 							<td>{{row.Symbol}}</td>
 							<td style="text-align:right;">{{formatPercentage(row.PLPercent)}}&nbsp;({{formatNumber(row.PL)}})</td>
-							<td style="text-align:right;">{{formatNumber(row.XIRR)}}</td>
 							<td style="text-align:right;">{{formatNumber(row.NumberOfShares)}}</td>
 							<td style="text-align:right;">{{formatNumber(row.LTCGShares)}}</td>
 							<td style="text-align:right;">{{formatNumber(row.SharePrice)}}</td>
