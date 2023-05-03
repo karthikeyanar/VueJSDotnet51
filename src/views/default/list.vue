@@ -136,6 +136,7 @@
 				<thead>
 					<tr>
 						<th>Symbol</th>
+						<th style="text-align:right;">PL%</th>
 						<th style="text-align:right;">PL</th>
 						<th style="text-align:right;">Shares</th>
 						<th style="text-align:right;">LTCG Shares</th>
@@ -149,7 +150,8 @@
 					<template v-for="(row,i) in shares" :key="row">
 						<tr v-if="cBool(row.IsEdit)==false">
 							<td>{{row.Symbol}}</td>
-							<td style="text-align:right;">{{formatPercentage(row.PLPercent)}}&nbsp;({{formatNumber(row.PL)}})</td>
+							<td style="text-align:right;">{{formatPercentage(row.PLPercent)}}</td>
+							<td style="text-align:right;">{{formatNumber(row.PL)}}</td>
 							<td style="text-align:right;">{{formatNumber(row.NumberOfShares)}}</td>
 							<td style="text-align:right;">{{formatNumber(row.LTCGShares)}}</td>
 							<td style="text-align:right;">{{formatNumber(row.SharePrice)}}</td>

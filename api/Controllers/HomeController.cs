@@ -66,15 +66,7 @@ namespace api.Controllers
                 {
                     where += " and lot.Symbol in (" + symbol + ")" + Environment.NewLine;
                 }
-            }
-            if ((isOptions ?? false) == true)
-            {
-                where += " and lot.Symbol like '%NIFTY%'" + Environment.NewLine;
-            }
-            if ((isGold ?? false) == true)
-            {
-                where += " and lot.Symbol like '%GOLD%'" + Environment.NewLine;
-            }
+            } 
             if (string.IsNullOrEmpty(tradeType) == false)
             {
                 tradeType = Helper.ConvertStringSQLFormat(tradeType);
@@ -102,8 +94,6 @@ namespace api.Controllers
             List<string> debtSymbols = new List<string> { "LIQUIDBEES", "LIQUIDBEES-F" };
             totalSharesList = (from q in totalSharesList
                                where debtSymbols.Contains(q.Symbol) == false
-                               && q.Symbol.Contains("NIFTY") == false
-                               && q.Symbol.Contains("GOLD") == false
                                select q).ToList();
             
             decimal? totalGold = (from q in totalSharesList where q.Symbol == "GOLD" select q.Amount).Sum();
@@ -112,11 +102,8 @@ namespace api.Controllers
             decimal? totalInvestmentCall = (from q in totalSharesList 
                                             where dividendSymbols.Contains(q.Symbol) == false
                                             && debtSymbols.Contains(q.Symbol) == false
-                                            && q.Symbol.Contains("NIFTY") == false
-                                            && q.Symbol.Contains("GOLD") == false
                                             select q.Amount).Sum();
             decimal? totalOptionsCall = (from q in totalSharesList
-                                         where q.Symbol.Contains("NIFTY")==true
                                          select q.Amount).Sum();
             decimal? totalPL = (from q in totalSharesList select (q.PL ?? 0)).Sum();
             decimal? totalUnRealizedPL = (from q in totalSharesList
@@ -222,22 +209,8 @@ namespace api.Controllers
                 {
                     where += " and lot.Symbol in (" + symbol + ")" + Environment.NewLine;
                 }
-            }
-            //if ((isOptions ?? false) == true)
-            //{
-            //    where += " and lot.Symbol like '%NIFTY%'" + Environment.NewLine;
-            //}
-            //if ((isGold ?? false) == true)
-            //{
-            //    where += " and lot.Symbol like '%GOLD%'" + Environment.NewLine;
-            //}
-            //if ((isCurrent ?? false) == true)
-            //{
+            } 
             where += " and lot.NumberOfShares >= 1" + Environment.NewLine;
-            where += " and lot.Symbol not like '%GOLD%'" + Environment.NewLine;
-            where += " and lot.Symbol not like '%NIFTY%'" + Environment.NewLine;
-            where += " and lot.Symbol not like '%LIQUIDBEES%'" + Environment.NewLine;
-            //}
             sql += where + Environment.NewLine;
             if (string.IsNullOrEmpty(sortName) == true)
             {
@@ -469,14 +442,6 @@ namespace api.Controllers
                 {
                     where += " and lot.Symbol in (" + symbol + ")";
                 }
-            }
-            if ((isOptions ?? false) == true)
-            {
-                where += " and lot.Symbol like '%NIFTY%'" + Environment.NewLine;
-            }
-            if ((isGold ?? false) == true)
-            {
-                where += " and lot.Symbol like '%GOLD%'" + Environment.NewLine;
             }
             string sql = "select " + Environment.NewLine +
                         "lot.Symbol" + Environment.NewLine +

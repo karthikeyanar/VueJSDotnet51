@@ -103,6 +103,18 @@ namespace PepperExcelImport
                                     {
                                         symbol = "NASDAQ";
                                     }
+                                if (symbol.Contains("NIFTY IT") == true)
+                                {
+                                    symbol = "NIFTY IT";
+                                }
+                                if (symbol.Contains("INDIGRID") == true)
+                                {
+                                    symbol = "INDIGRID";
+                                }
+                                if (symbol.Contains("PGINVIT") == true)
+                                {
+                                    symbol = "PGINVIT";
+                                }
                                 CreateAssetCore(symbol, date, numberOfShares, price, transactionId, lotType);
                                     Console.WriteLine(i);
                                 }
@@ -186,6 +198,18 @@ namespace PepperExcelImport
                                 if (symbol.Contains("NASDAQ") == true)
                                 {
                                     symbol = "NASDAQ";
+                                }
+                                if (symbol.Contains("NIFTY IT") == true)
+                                {
+                                    symbol = "NIFTY IT";
+                                }
+                                if (symbol.Contains("INDIGRID") == true)
+                                {
+                                    symbol = "INDIGRID";
+                                }
+                                if (symbol.Contains("PGINVIT") == true)
+                                {
+                                    symbol = "PGINVIT";
                                 }
                                 decimal percentage = DataTypeHelper.ToDecimal(csv[csvHeader.GetIndex("Percentage")].Trim());
                                 string indexName = csv[csvHeader.GetIndex("Index")].Trim();
@@ -312,6 +336,18 @@ namespace PepperExcelImport
                                 if (symbol.Contains("NASDAQ") == true)
                                 {
                                     symbol = "NASDAQ";
+                                }
+                                if (symbol.Contains("NIFTY IT") == true)
+                                {
+                                    symbol = "NIFTY IT";
+                                }
+                                if (symbol.Contains("INDIGRID") == true)
+                                {
+                                    symbol = "INDIGRID";
+                                }
+                                if (symbol.Contains("PGINVIT") == true)
+                                {
+                                    symbol = "PGINVIT";
                                 }
                                 using (SqlConnection connection = new SqlConnection(_ConnectionString))
                                 {
