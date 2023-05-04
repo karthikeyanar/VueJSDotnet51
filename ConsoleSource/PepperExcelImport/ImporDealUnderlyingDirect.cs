@@ -10,7 +10,7 @@ using CsvHelper;
 using System.Data.SqlClient;
 using Dapper;
 using System.Globalization;
-using System.Configuration; 
+using System.Configuration;
 using System.Text.RegularExpressions;
 using System.Data.Common.CommandTrees.ExpressionBuilder;
 using System.Data.Metadata.Edm;
@@ -28,81 +28,81 @@ namespace PepperExcelImport
 
         public static void Import()
         {
-            
-                string sql = "";
-                string rootPath = System.Configuration.ConfigurationManager.AppSettings["RootPath"];
-                string updateFolder = "csv";
-                string filesFolder = Path.Combine(rootPath, updateFolder);
-                string[] files = System.IO.Directory.GetFiles(filesFolder);
-                int i = 0;
-                foreach (string filePath in files)
+
+            string sql = "";
+            string rootPath = System.Configuration.ConfigurationManager.AppSettings["RootPath"];
+            string updateFolder = "csv";
+            string filesFolder = Path.Combine(rootPath, updateFolder);
+            string[] files = System.IO.Directory.GetFiles(filesFolder);
+            int i = 0;
+            foreach (string filePath in files)
+            {
+                // Start ImportDealUnderlyingDirect
+                if (filePath.ToLower().Contains(".csv") == true)
                 {
-                    // Start ImportDealUnderlyingDirect
-                    if (filePath.ToLower().Contains(".csv") == true)
+                    using (TextReader reader = System.IO.File.OpenText(filePath))
                     {
-                        using (TextReader reader = System.IO.File.OpenText(filePath))
+                        CSVHeaderHelper csvHeader = new CSVHeaderHelper();
+                        CsvReader csv = null;
+                        csv = new CsvReader(reader);
+                        i = 0;
+                        while (csv.Read())
                         {
-                            CSVHeaderHelper csvHeader = new CSVHeaderHelper();
-                            CsvReader csv = null;
-                            csv = new CsvReader(reader);
-                            i = 0;
-                            while (csv.Read())
+                            i += 1;
+                            if (i == 1)
                             {
-                                i += 1;
-                                if (i == 1)
+                                int j;
+                                for (j = 0; j < 100; j++)
                                 {
-                                    int j;
-                                    for (j = 0; j < 100; j++)
+                                    try
                                     {
-                                        try
-                                        {
-                                            csvHeader.Headers.Add(new CSVHeader { Name = csv[j], Index = j });
-                                        }
-                                        catch
-                                        {
-                                            break;
-                                        }
+                                        csvHeader.Headers.Add(new CSVHeader { Name = csv[j], Index = j });
+                                    }
+                                    catch
+                                    {
+                                        break;
                                     }
                                 }
-                                else
+                            }
+                            else
+                            {
+                                string symbol = csv[csvHeader.GetIndex("Symbol")].Trim();//.Replace("-BE", "").Replace("IV", "").Trim();
+                                switch (symbol)
                                 {
-                                    string symbol = csv[csvHeader.GetIndex("Symbol")].Trim();//.Replace("-BE", "").Replace("IV", "").Trim();
-                                    switch (symbol)
-                                    {
-                                        case "PROVOGE-BE": symbol = "PROVOGE"; break;
-                                    }
-                                    string action = csv[csvHeader.GetIndex("Trade Type")].Trim().ToLower();
-                                    decimal numberOfShares = DataTypeHelper.ToDecimal(csv[csvHeader.GetIndex("Quantity")].Trim());
-                                    decimal price = DataTypeHelper.ToDecimal(csv[csvHeader.GetIndex("Price")].Trim());
-                                    DateTime date = DataTypeHelper.ToDateTime(csv[csvHeader.GetIndex("Trade Date")].Trim());
-                                    string transactionId = csv[csvHeader.GetIndex("Trade ID")].Trim();
-                                    string insertSQL = CommonHelper.GetResource("PepperExcelImport.SQL.dm_asset_core.sql");
-                                    sql = "";
-                                    DateTime todayDate = DateTime.Now.Date;
-                                    string lotType = "";
-                                    switch (action)
-                                    {
-                                        case "buy": lotType = "B"; break;
-                                        case "sell": lotType = "S"; break;
-                                        case "dividend": lotType = "D"; break;
-                                        default: lotType = "P"; break;
-                                    }
-                                    if (symbol.StartsWith("NIFTY") == true)
-                                    {
-                                        symbol = "NIFTY";
-                                    }
-                                    if (symbol.StartsWith("SGB") == true)
-                                    {
-                                        symbol = "GOLD";
-                                    }
-                                    if (symbol.StartsWith("LIQUIDBEES") == true)
-                                    {
-                                        symbol = "LIQUIDBEES";
-                                    }
-                                    if (symbol.Contains("NASDAQ") == true)
-                                    {
-                                        symbol = "NASDAQ";
-                                    }
+                                    case "PROVOGE-BE": symbol = "PROVOGE"; break;
+                                }
+                                string action = csv[csvHeader.GetIndex("Trade Type")].Trim().ToLower();
+                                decimal numberOfShares = DataTypeHelper.ToDecimal(csv[csvHeader.GetIndex("Quantity")].Trim());
+                                decimal price = DataTypeHelper.ToDecimal(csv[csvHeader.GetIndex("Price")].Trim());
+                                DateTime date = DataTypeHelper.ToDateTime(csv[csvHeader.GetIndex("Trade Date")].Trim());
+                                string transactionId = csv[csvHeader.GetIndex("Trade ID")].Trim();
+                                string insertSQL = CommonHelper.GetResource("PepperExcelImport.SQL.dm_asset_core.sql");
+                                sql = "";
+                                DateTime todayDate = DateTime.Now.Date;
+                                string lotType = "";
+                                switch (action)
+                                {
+                                    case "buy": lotType = "B"; break;
+                                    case "sell": lotType = "S"; break;
+                                    case "dividend": lotType = "D"; break;
+                                    default: lotType = "P"; break;
+                                }
+                                if (symbol.StartsWith("NIFTY") == true)
+                                {
+                                    symbol = "NIFTY";
+                                }
+                                if (symbol.StartsWith("SGB") == true)
+                                {
+                                    symbol = "GOLD";
+                                }
+                                if (symbol.StartsWith("LIQUIDBEES") == true)
+                                {
+                                    symbol = "LIQUIDBEES";
+                                }
+                                if (symbol.Contains("NASDAQ") == true)
+                                {
+                                    symbol = "NASDAQ";
+                                }
                                 if (symbol.Contains("NIFTY IT") == true)
                                 {
                                     symbol = "NIFTY IT";
@@ -116,21 +116,21 @@ namespace PepperExcelImport
                                     symbol = "PGINVIT";
                                 }
                                 CreateAssetCore(symbol, date, numberOfShares, price, transactionId, lotType);
-                                    Console.WriteLine(i);
-                                }
+                                Console.WriteLine(i);
                             }
-                        } 
-                        System.IO.File.Delete(filePath);
+                        }
                     }
+                    System.IO.File.Delete(filePath);
                 }
+            }
 
-                //Console.WriteLine("Execute Store Procedure please wait");
-                //sql = "exec PROC_dm_asset_core_lot_share";
-                //using (SqlConnection connection = new SqlConnection(_ConnectionString))
-                //{
-                //    connection.Execute(sql);
-                //}
-            
+            //Console.WriteLine("Execute Store Procedure please wait");
+            //sql = "exec PROC_dm_asset_core_lot_share";
+            //using (SqlConnection connection = new SqlConnection(_ConnectionString))
+            //{
+            //    connection.Execute(sql);
+            //}
+
         }
 
         public static void ImportAllocation()
@@ -251,9 +251,11 @@ namespace PepperExcelImport
                                                 "";
                                         connection.Execute(sql, new
                                         {
-                                            dm_asset_core_index_id = dm_asset_core_index_id,Symbol = symbol,Value = percentage
+                                            dm_asset_core_index_id = dm_asset_core_index_id,
+                                            Symbol = symbol,
+                                            Value = percentage
                                         });
-                                    } 
+                                    }
                                     else
                                     {
                                         throw new Exception("Index name does not exist");
@@ -276,7 +278,7 @@ namespace PepperExcelImport
             string filesFolder = Path.Combine(rootPath, updateFolder);
             string[] files = System.IO.Directory.GetFiles(filesFolder);
             int i = 0;
-            if(files.Length > 0)
+            if (files.Length > 0)
             {
                 using (SqlConnection connection = new SqlConnection(_ConnectionString))
                 {
@@ -390,7 +392,7 @@ namespace PepperExcelImport
             }
             double xirr = 0;
             int i = 0;
-            foreach(string symbol in symbols)
+            foreach (string symbol in symbols)
             {
                 i += 1;
                 xirr = XIRR(symbol);
@@ -484,9 +486,44 @@ namespace PepperExcelImport
             return xirr;
         }
 
-        public static void CreateAssetCore(string symbol,DateTime date,decimal numberOfShares,decimal price,string transactionId
-            ,string lotType)
+        public static void CreateAssetCore(string symbol, DateTime date, decimal numberOfShares, decimal price, string transactionId
+            , string lotType)
         {
+            if (string.IsNullOrEmpty(symbol) == false)
+            {
+                switch (symbol)
+                {
+                    case "PROVOGE-BE": symbol = "PROVOGE"; break;
+                }
+                if (symbol.StartsWith("NIFTY") == true)
+                {
+                    symbol = "NIFTY";
+                }
+                if (symbol.StartsWith("SGB") == true)
+                {
+                    symbol = "GOLD";
+                }
+                if (symbol.StartsWith("LIQUIDBEES") == true)
+                {
+                    symbol = "LIQUIDBEES";
+                }
+                if (symbol.Contains("NASDAQ") == true)
+                {
+                    symbol = "NASDAQ";
+                }
+                if (symbol.Contains("NIFTY IT") == true)
+                {
+                    symbol = "NIFTY IT";
+                }
+                if (symbol.Contains("INDIGRID") == true)
+                {
+                    symbol = "INDIGRID";
+                }
+                if (symbol.Contains("PGINVIT") == true)
+                {
+                    symbol = "PGINVIT";
+                }
+            }
             string _ConnectionString = System.Configuration.ConfigurationManager.ConnectionStrings["PepperContext"].ToString();
             string insertSQL = CommonHelper.GetResource("PepperExcelImport.SQL.dm_asset_core.sql");
             if (string.IsNullOrEmpty(symbol) == false)
@@ -526,7 +563,6 @@ namespace PepperExcelImport
                 }
             }
         }
-         
     }
 
     public class CSVHeaderHelper
@@ -614,6 +650,15 @@ namespace PepperExcelImport
         public string label { get; set; }
         public string value { get; set; }
         public string other { get; set; }
+    }
+
+    public class dm_asset_core_lot_share
+    {
+        public string Name { get; set; }
+        public string Symbol { get; set; }
+        public decimal? NumberOfShares { get; set; }
+        public decimal? SharePrice { get;set; }
+        public decimal? Amount { get; set; }
     }
 
     public class Helper
