@@ -71,7 +71,7 @@
 							<td style="text-align:right;">{{formatNumber(row.Price)}}</td>
 							<td style="text-align:right;">{{formatNumber(row.RequireShares)}}</td>
 							<td style="text-align:right;">{{formatNumber(row.CurrentShares)}}</td>
-							<td style="text-align:right;">{{formatNumber(row.Balance)}}</td>
+							<td style="text-align:right;font-weight:bold;">{{formatNumber(row.Balance)}}</td>
 							<td style="text-align:right;">{{formatPercentage(row.Percentage)}}</td>
 							<td style="text-align:right;">{{formatNumber(row.Balance * row.Price)}}</td>
 						</tr>

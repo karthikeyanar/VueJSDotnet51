@@ -309,7 +309,7 @@ namespace api.Controllers
                 where += " lot.Symbol like '" + term + "%'";
             }
             string sql = "";
-            sql = "select lot.Symbol as id,lot.Symbol as label,lot.Symbol as value from dm_asset_core_lot lot";
+            sql = "select lot.Symbol as id,lot.Symbol as label,lot.Symbol as value from dm_asset_core_symbol lot";
             sql += where;
             sql += " group by lot.Symbol";
             sql += " order by lot.Symbol asc ";

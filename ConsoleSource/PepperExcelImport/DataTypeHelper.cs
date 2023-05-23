@@ -5,7 +5,7 @@ using System.Web;
 using System.Data;
 
 namespace PepperExcelImport {
-    public static class DataTypeHelper {
+    public static class DataTypeHelper1 {
 
         public static string GetLetter(int intCol)
         {
