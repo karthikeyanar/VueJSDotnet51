@@ -103,6 +103,13 @@ namespace api.Controllers
                                             where dividendSymbols.Contains(q.Symbol) == false
                                             && debtSymbols.Contains(q.Symbol) == false
                                             select q.Amount).Sum();
+
+            decimal? totalStrategyCall = (from q in totalSharesList 
+                                            where dividendSymbols.Contains(q.Symbol) == false
+                                            && debtSymbols.Contains(q.Symbol) == false
+                                            && (q.Value ?? 0) > 0
+                                            select q.Amount).Sum();
+
             decimal? totalOptionsCall = (from q in totalSharesList
                                          select q.Amount).Sum();
             decimal? totalPL = (from q in totalSharesList select (q.PL ?? 0)).Sum();
@@ -135,6 +142,7 @@ namespace api.Controllers
                 ,TotalCapitalCall = totalCapitalCall
                 ,TotalDividendCall = totalDividendCall
                 ,TotalInvestmentCall = totalInvestmentCall
+                ,TotalStrategyCall = totalStrategyCall
                 ,TotalOptionsCall = totalOptionsCall
                 ,TotalDebtCall = totalDebtCall
                 ,TotalPL = totalPL
@@ -190,7 +198,9 @@ namespace api.Controllers
                     ",((lot.NumberOfShares * (select top 1 isnull(cp.SharePrice,0) as CurrentPrice from dm_asset_core_lot cp where cp.Symbol = lot.Symbol and cp.LotType != 'D' order by cp.RecordDate desc,cp.dm_asset_core_lot_id desc)) - (lot.NumberOfShares * lot.SharePrice)) as PL" + Environment.NewLine +
                     ",(((lot.NumberOfShares * (select top 1 isnull(cp.SharePrice,0) as CurrentPrice from dm_asset_core_lot cp where cp.Symbol = lot.Symbol and cp.LotType != 'D' order by cp.RecordDate desc,cp.dm_asset_core_lot_id desc)) - (lot.NumberOfShares * lot.SharePrice)) / (lot.NumberOfShares * lot.SharePrice)) * 100 as PLPercent" + Environment.NewLine +
                     ",ts.LTCGShares" + Environment.NewLine +
+                    ",si.[Value] as [Value]" + Environment.NewLine +
                     " from dm_asset_core_lot_share lot" + Environment.NewLine +
+                    " left outer join dm_asset_core_symbol_index si on si.symbol = lot.symbol" + Environment.NewLine +
                     " join @TempSymbol ts on ts.Symbol = lot.Symbol" + Environment.NewLine +
                     "";
             string where = "";

@@ -52,6 +52,8 @@ namespace api.Models
             }
         }
         public decimal? LTCGShares { get; set; }
+
+        public decimal? Value {get;set;}
     }
 
     public class DealXIRRReportModel

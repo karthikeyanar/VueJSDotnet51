@@ -84,6 +84,7 @@
 				<table class="table table-sm table-borderless">
 					<tr>
 						<td style="white-space:nowrap;">XIRR:&nbsp;<span>{{formatNumber(xirr)}}%</span></td>
+						<td style="white-space:nowrap;">Strategy Investment:&nbsp;<span>{{formatNumber(totalStrategyCall)}}</span></td>
 						<td style="white-space:nowrap;">Investment:&nbsp;<span>{{formatNumber(totalCapitalCall)}}</span></td>
 						<td style="white-space:nowrap;">Current Market Value:&nbsp;<span>{{formatNumber(currentMarketValue)}}</span></td>
 						<td style="white-space:nowrap;">Profit & Loss:&nbsp;<span>{{formatNumber(totalPL)}}&nbsp;({{formatPercentage(totalPLPercent)}})</span></td>

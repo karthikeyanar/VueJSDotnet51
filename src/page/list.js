@@ -30,6 +30,7 @@ export default {
             totalCapitalCall: 0,
             totalDividendCall: 0,
             totalInvestmentCall: 0,
+            totalStrategyCall: 0,
             totalOptionsCall: 0,
             totalDebtCall: 0,
             totalGold:0,
@@ -49,7 +50,7 @@ export default {
             var self = this;
             self.getNew(function () {
                 self.load(function () {
-                    self.allocationAmount = self.totalInvestmentCall;
+                    self.allocationAmount = 0;//self.totalInvestmentCall;
                 });
             });
         },
@@ -88,6 +89,7 @@ export default {
                     self.totalCapitalCall = result.TotalCapitalCall;
                     self.totalDividendCall = result.TotalDividendCall;
                     self.totalInvestmentCall = result.TotalInvestmentCall;
+                    self.totalStrategyCall = result.TotalStrategyCall;
                     self.totalOptionsCall = result.TotalOptionsCall;
                     self.totalDebtCall = result.TotalDebtCall;
                     self.totalGold = result.TotalGold;
