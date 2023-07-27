@@ -137,28 +137,28 @@
 				<thead>
 					<tr>
 						<th>Symbol</th>
-						<th style="text-align:right;">PL%</th>
+						<th style="text-align:right;">Invested</th>
+						<th style="text-align:right;">CMV</th>
 						<th style="text-align:right;">PL</th>
+						<th style="text-align:right;">PL%</th>
 						<th style="text-align:right;">Shares</th>
 						<th style="text-align:right;">LTCG Shares</th>
 						<th style="text-align:right;">Avg.Price</th>
 						<th style="text-align:right;">Current Price</th>
-						<th style="text-align:right;">Amount</th>
-						<th style="text-align:right;">CMV</th>
 					</tr>
 				</thead>
 				<tbody>
 					<template v-for="(row,i) in shares" :key="row">
 						<tr v-if="cBool(row.IsEdit)==false">
 							<td>{{row.Symbol}}</td>
-							<td style="text-align:right;">{{formatPercentage(row.PLPercent)}}</td>
+							<td style="text-align:right;">{{formatNumber(row.Amount)}}</td>
+							<td style="text-align:right;">{{formatNumber(row.CurrentMarketValue)}}</td>
 							<td style="text-align:right;">{{formatNumber(row.PL)}}</td>
+							<td style="text-align:right;">{{formatPercentage(row.PLPercent)}}</td>
 							<td style="text-align:right;">{{formatNumber(row.NumberOfShares)}}</td>
 							<td style="text-align:right;">{{formatNumber(row.LTCGShares)}}</td>
 							<td style="text-align:right;">{{formatNumber(row.SharePrice)}}</td>
 							<td style="text-align:right;">{{formatNumber(row.CurrentPrice)}}</td>
-							<td style="text-align:right;">{{formatNumber(row.Amount)}}</td>
-							<td style="text-align:right;">{{formatNumber(row.CurrentMarketValue)}}</td>
 						</tr>
 					</template>
 				</tbody>

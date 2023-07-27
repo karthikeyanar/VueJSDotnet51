@@ -96,9 +96,9 @@ namespace api.Controllers
                                where debtSymbols.Contains(q.Symbol) == false
                                select q).ToList();
             
-            decimal? totalGold = (from q in totalSharesList where q.Symbol == "GOLD" select q.Amount).Sum();
+            //decimal? totalGold = (from q in totalSharesList where q.Symbol == "GOLD" select q.Amount).Sum();
             decimal? totalCapitalCall = (from q in totalSharesList select q.Amount).Sum();
-            decimal? totalDividendCall = (from q in totalSharesList where dividendSymbols.Contains(q.Symbol) == true select q.Amount).Sum();
+            //decimal? totalDividendCall = (from q in totalSharesList where dividendSymbols.Contains(q.Symbol) == true select q.Amount).Sum();
             decimal? totalInvestmentCall = (from q in totalSharesList 
                                             where dividendSymbols.Contains(q.Symbol) == false
                                             && debtSymbols.Contains(q.Symbol) == false
@@ -110,14 +110,13 @@ namespace api.Controllers
                                             && (q.Value ?? 0) > 0
                                             select q.Amount).Sum();
 
-            decimal? totalOptionsCall = (from q in totalSharesList
-                                         select q.Amount).Sum();
+            //decimal? totalOptionsCall = (from q in totalSharesList
+              //                           select q.Amount).Sum();
             decimal? totalPL = (from q in totalSharesList select (q.PL ?? 0)).Sum();
-            decimal? totalUnRealizedPL = (from q in totalSharesList
-                                          where q.NumberOfShares > 0
+
+            decimal? totalUnRealizedPL = (from q in totalSharesList 
                                           select (q.UnRealizedPL ?? 0)).Sum();
-            decimal? currentMarketValue = (from q in totalSharesList
-                                           where q.NumberOfShares > 0
+            decimal? currentMarketValue = (from q in totalSharesList 
                                            select (q.CurrentMarketValue ?? 0)).Sum();
             decimal? totalDebtCall = (from q in totalSharesList where debtSymbols.Contains(q.Symbol) == true select q.Amount).Sum();
 
@@ -131,20 +130,20 @@ namespace api.Controllers
                     indexList = multi.Read<IndexList>().ToList();
                 }
             }
-            totalCapitalCall = currentIndexValue.Total;
-            totalInvestmentCall = currentIndexValue.Total;
-            currentMarketValue = currentIndexValue.Current;
-            totalPL = currentIndexValue.PL;
+            //totalCapitalCall = currentIndexValue.Total;
+            //totalInvestmentCall = currentIndexValue.Total;
+            //currentMarketValue = currentIndexValue.Current;
+            //totalPL = currentIndexValue.PL;
             return new { xirr = xirr
                 ,total = totalRows
                 ,rows = list 
-                ,TotalGold = totalGold
+                //,TotalGold = totalGold
                 ,TotalCapitalCall = totalCapitalCall
-                ,TotalDividendCall = totalDividendCall
+                //,TotalDividendCall = totalDividendCall
                 ,TotalInvestmentCall = totalInvestmentCall
                 ,TotalStrategyCall = totalStrategyCall
-                ,TotalOptionsCall = totalOptionsCall
-                ,TotalDebtCall = totalDebtCall
+                //,TotalOptionsCall = totalOptionsCall
+                //,TotalDebtCall = totalDebtCall
                 ,TotalPL = totalPL
                 ,TotalPLPercent = currentIndexValue.PLPercent
                 ,TotalUnRealizedPL = totalUnRealizedPL
