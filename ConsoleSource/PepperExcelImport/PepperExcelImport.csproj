@@ -162,6 +162,10 @@
     <EmbeddedResource Include="SQL\dm_asset_core.sql" />
     <EmbeddedResource Include="SQL\dm_asset_core_irr.sql" />
     <EmbeddedResource Include="SQL\EquityCreate.sql" />
+    <EmbeddedResource Include="SQL\FinancialReportingSchemaCategory.sql" />
+    <EmbeddedResource Include="SQL\FinancialReportingSchemaKey.sql" />
+    <EmbeddedResource Include="SQL\FinancialReporting_Update.sql" />
+    <EmbeddedResource Include="SQL\FinancialReporting.sql" />
     <Content Include="SQL\f1.sql" />
     <Content Include="SQL\f2.sql" />
     <Content Include="SQL\IssuerCreate.sql" />

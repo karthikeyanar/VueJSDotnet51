@@ -84,7 +84,6 @@
 				<table class="table table-sm table-borderless">
 					<tr>
 						<td style="white-space:nowrap;">XIRR:&nbsp;<span>{{formatNumber(xirr)}}%</span></td>
-						<td style="white-space:nowrap;">Strategy Investment:&nbsp;<span>{{formatNumber(totalStrategyCall)}}</span></td>
 						<td style="white-space:nowrap;">Investment:&nbsp;<span>{{formatNumber(totalCapitalCall)}}</span></td>
 						<td style="white-space:nowrap;">Current Market Value:&nbsp;<span>{{formatNumber(currentMarketValue)}}</span></td>
 						<td style="white-space:nowrap;">Profit & Loss:&nbsp;<span>{{formatNumber(totalPL)}}&nbsp;({{formatPercentage(totalPLPercent)}})</span></td>
@@ -103,15 +102,6 @@
 				</li>
 			</ul><br />
 			<div v-if="isTransaction==false" style="margin-bottom:10px;">
-				<table class="table">
-					<tbody>
-						<tr>
-							<template v-for="(row,i) in indexList">
-								<td>{{row.Name}}:&nbsp;{{formatPercentage(row.PLPercent)}}</td>
-							</template>
-						</tr>
-					</tbody>
-				</table>
 				<div style="float:left;margin-right:5px;margin-top:5px;">Sort By:</div>
 				<div style="float:left;margin-right:10px;">
 					<select class="form-select form-select-sm" v-model="listSearch.sortName" v-on:change="loadShares">

@@ -24,6 +24,8 @@ using System.Data.Metadata.Edm;
 using Google.Apis.Drive.v3;
 using System.Security.Cryptography;
 using System.Runtime.InteropServices.ComTypes;
+using System.Net;
+using static Microsoft.FSharp.Core.ByRefKinds;
 
 namespace PepperExcelImport
 {
@@ -38,9 +40,12 @@ namespace PepperExcelImport
     {
         static string[] Scopes = { SheetsService.Scope.Spreadsheets, SheetsService.Scope.Drive, SheetsService.Scope.DriveFile };
         static string ApplicationName = "Google Sheets API .NET Quickstart";
+        static string _ConnectionString = "";
 
         static void Main(string[] args)
         {
+            _ConnectionString = System.Configuration.ConfigurationManager.ConnectionStrings["PepperContext"].ToString();
+            UpdateScreener();
             bool isSkip = false;
             if (args != null)
             {
@@ -241,7 +246,6 @@ namespace PepperExcelImport
             // Call the DriveService.Files.Delete method to delete the spreadsheet
             driveservice.Files.Delete(googleSheetId).Execute();
         }
-
 
         public static void UpdatePriceStart()
         {
@@ -919,6 +923,262 @@ namespace PepperExcelImport
             }
 
             return columnName;
+        }
+
+        public static void UpdateScreener()
+        {
+            string sql = "declare @quarterstartdate datetime;" + Environment.NewLine +
+                        "SELECT @quarterstartdate = DATEADD(DD, -1, DATEADD(QQ, DATEDIFF(QQ, 0, GETDATE()) + 1, 0))  " + Environment.NewLine +
+                        "declare @prevquarterenddate datetime; " + Environment.NewLine +
+                        "SELECT @prevquarterenddate = DATEADD(MONTH, 3, DATEADD(DAY, -1, DATEADD(QUARTER, -1, DATEADD(QUARTER, DATEDIFF(QUARTER, 0, @quarterstartdate), 0))))" + Environment.NewLine +
+                        "select * from (" + Environment.NewLine +
+                        "select sym.Symbol,(select count(*) as cnt from FinancialReporting fr where fr.Symbol = sym.Symbol and fr.PeriodDate < @prevquarterenddate) as cnt " + Environment.NewLine +
+                        "from dm_asset_core_symbol sym" + Environment.NewLine +
+                        "group by sym.Symbol " + Environment.NewLine +
+                        ") as tbl where isnull(tbl.cnt,0) <= 0" + Environment.NewLine +
+                        "order by tbl.Symbol " + Environment.NewLine +
+                        "";
+            List<string> symbols;
+            using (SqlConnection connection = new SqlConnection(_ConnectionString))
+            {
+                symbols = connection.Query<string>(sql).ToList();    
+            }
+            int index = 0;
+            foreach (string symbol in symbols)
+            {
+                string html = "";
+                string url = "https://www.screener.in/company/{0}/consolidated/";
+                url = string.Format(url,symbol);
+                WebClient webClient = new WebClient();
+                html = webClient.DownloadString(url);
+                UpdateScreenQuarterly(symbol, html);
+                index += 1;
+                Console.WriteLine(index + " of " + symbols.Count);
+            }
+        }
+
+        public static void UpdateScreenQuarterly(string symbol,string rootHtmlContent)
+        {
+            string category = "Income Statement";
+            int periodTypeId = 2;
+            string pattern = @"<section\s+id=""quarters""[^>]*>(.*?)<\/section>";
+            // Use Regex.Match to find the section with id="quarters"
+            Match match = Regex.Match(rootHtmlContent, pattern, RegexOptions.Singleline);
+
+            if (match.Success)
+            {
+                string htmlContent = match.Groups[1].Value;
+
+
+                // Define the regular expressions to match the table headers and rows
+                string headerPattern = "<th[^>]*>(.*?)</th>";
+                string rowPattern = "<tr[^>]*>(.*?)</tr>";
+                string colPattern = "<td[^>]*>(.*?)</td>";
+
+                // Initialize lists to store the header and data
+                List<string> headers = new List<string>();
+                
+
+                // Match the table headers using the header pattern
+                var headerMatches = Regex.Matches(htmlContent, headerPattern, RegexOptions.Singleline);
+
+                // Extract the column headers
+                foreach (Match headerMatch in headerMatches)
+                {
+                    string header = Regex.Replace(headerMatch.Groups[1].Value, "<.*?>", "").Trim();
+                    if (string.IsNullOrEmpty(header) == true)
+                    {
+                        header = "Key";
+                    }
+                    headers.Add(header);
+                }
+
+                // Match the table rows using the row pattern
+                var rowMatches = Regex.Matches(htmlContent, rowPattern, RegexOptions.Singleline);
+
+                // Extract the data from each row
+                foreach (Match rowMatch in rowMatches)
+                {
+                    // Get the content of the current row
+                    string rowContent = rowMatch.Groups[1].Value;
+
+                    // Match the table columns using the column pattern
+                    var colMatches = Regex.Matches(rowContent, colPattern, RegexOptions.Singleline);
+
+                    // Extract the data values from each column
+                    List<string> values = new List<string>();
+                    string key = "";
+                    int index = -1;
+                    foreach (Match colMatch in colMatches)
+                    {
+                        index += 1;
+                        string header = string.Empty;
+                        try
+                        {
+                            header = headers[index];
+                        }
+                        catch { }
+                        string v = string.Empty;
+                        string decimalPattern = @"[-+]?(?:\$\s*)?\b\d{1,3}(?:,\d{3})*(?:\.\d+)?\b";  // Regular expression pattern to match the decimal value
+                        string result = Regex.Match(colMatch.Groups[1].Value, decimalPattern).Value;
+                        if (DataTypeHelper.ToDecimal(result) != 0)
+                        {
+                            v = result.ToString();
+                        }
+                        else
+                        {
+                            if (string.IsNullOrEmpty(key) == true)
+                            {
+                                string pattern2 = @"<button[^>]*>(.*?)<\/button>";
+                                Match match2 = Regex.Match(colMatch.Groups[1].Value, pattern2, RegexOptions.Singleline);
+                                if (match2.Success)
+                                {
+                                    string innerText = match2.Groups[1].Value;
+                                    v = Regex.Replace(innerText, @"<[^>]+>|&nbsp;", "").Replace("+", "").Trim();
+                                }
+                                else
+                                {
+                                    v = RemoveNewLines(colMatch.Groups[1].Value).Trim();
+                                }
+                                if (v.Contains("EPS in R") == true)
+                                {
+                                    v = "EPS";
+                                }
+                                key = v;
+                            }
+                        }
+                        if (string.IsNullOrEmpty(v) == false && v.Contains("Raw PDF") == true)
+                        {
+                            break;
+                        }
+                        else
+                        {
+                            DateTime dt = DataTypeHelper.ToDateTime(header);
+                            if (dt.Year > 1900 && string.IsNullOrEmpty(key) == false)
+                            {
+                                if (key == "EPS")
+                                {
+                                    string s = string.Empty;
+                                }
+                                DateTime lastDateOfMonth = new DateTime(dt.Year, dt.Month, DateTime.DaysInMonth(dt.Year, dt.Month));
+                                InsertFinanceValue(symbol, key, category, periodTypeId, lastDateOfMonth, DataTypeHelper.ToDecimal(v));
+                            }
+                        }
+                    }
+                }
+            }
+            else
+            {
+                Console.WriteLine("Section with id=\"quarters\" not found.");
+            }
+        }
+
+        public static void InsertFinanceValue(string symbol,string key, string category,int periodTypeId,DateTime datetime,decimal value)
+        {
+            using (SqlConnection connection = new SqlConnection(_ConnectionString))
+            {
+                int? keyId = InsertFinanceKey(key,category);
+                string selectsql = "select FinancialReportingID from FinancialReporting " + Environment.NewLine +
+                                " where FinancialReportingSourceKeyID = @FinancialReportingSourceKeyID" + Environment.NewLine +
+                                " and FinancialReportingPeriodTypeID = @FinancialReportingPeriodTypeID" + Environment.NewLine +
+                                " and PeriodDate = @PeriodDate" + Environment.NewLine +
+                                " and Symbol = @Symbol" + Environment.NewLine +
+                                "";
+                int? id = connection.Query<int?>(selectsql, new
+                {
+                    FinancialReportingSourceKeyID = (keyId ?? 0),
+                    FinancialReportingPeriodTypeID = periodTypeId,
+                    PeriodDate = datetime,
+                    Symbol = symbol
+                }).FirstOrDefault();
+
+                object param = new
+                {
+                    FinancialReportingSourceKeyID = (keyId ?? 0),
+                    FinancialReportingPeriodTypeID = periodTypeId,
+                    PeriodDate = datetime,
+                    FinancialReportingID = (id ?? 0),
+                    Value = value,
+                    Symbol = symbol
+                };
+
+                string sql = "";
+                int result;
+                if ((id ?? 0) <= 0)
+                {
+                    sql = CommonHelper.GetResource("PepperExcelImport.SQL.FinancialReporting.sql");
+                    result = connection.Execute(sql, param);
+                }
+                else
+                {
+                    sql = CommonHelper.GetResource("PepperExcelImport.SQL.FinancialReporting_Update.sql");
+                    result = connection.Execute(sql, param);
+                }
+            }
+        }
+
+        public static int InsertFinanceKey(string key,string category)
+        {
+            using (SqlConnection connection = new SqlConnection(_ConnectionString))
+            {
+                int? categoryId = InsertFinanceCategory(category);
+                string selectsql = "select FinancialReportingSchemaKeyID from FinancialReportingSchemaKey where FinancialReportingSchemaCategoryID = @FinancialReportingSchemaCategoryID and [Key] = @key";
+                int? id = connection.Query<int?>(selectsql, new
+                {
+                    FinancialReportingSchemaCategoryID = categoryId,
+                    key = key
+                }).FirstOrDefault();
+
+                if ((id ?? 0) <= 0)
+                {
+                    string sql = CommonHelper.GetResource("PepperExcelImport.SQL.FinancialReportingSchemaKey.sql");
+                    int result = connection.Execute(sql, new
+                    {
+                        FinancialReportingSchemaCategoryID = categoryId,
+                        key = key,
+                        IsEnabled = true
+                    });
+                }
+                id = connection.Query<int?>(selectsql, new
+                {
+                    FinancialReportingSchemaCategoryID = categoryId,
+                    key = key
+                }).FirstOrDefault();
+                return (id ?? 0);
+            }
+        }
+
+        public static int InsertFinanceCategory(string category)
+        {
+            using (SqlConnection connection = new SqlConnection(_ConnectionString))
+            {
+                string selectsql = "select FinancialReportingSchemaCategoryID from FinancialReportingSchemaCategory where CategoryType = @CategoryType";
+                int? id = connection.Query<int?>(selectsql, new
+                {
+                    CategoryType = category
+                }).FirstOrDefault();
+                if ((id ?? 0) <= 0)
+                {
+                    string sql = CommonHelper.GetResource("PepperExcelImport.SQL.FinancialReportingSchemaCategory.sql");
+                    int result = connection.Execute(sql, new
+                    {
+                        CategoryType = category
+                    });
+                }
+                id = connection.Query<int?>(selectsql, new
+                {
+                    CategoryType = category
+                }).FirstOrDefault();
+                return (id ?? 0);
+            }
+        }
+
+        public static string RemoveNewLines(string input)
+        {
+            string pattern = @"\r\n";
+            string replacement = ""; // Replace with an empty string to remove \r\n
+            string result = Regex.Replace(input, pattern, replacement);
+            return result;
         }
     }
 }
