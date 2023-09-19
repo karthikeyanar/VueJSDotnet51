@@ -7,7 +7,10 @@ SET @prevquarterenddate = DATEADD(DAY, -1, DATEADD(QUARTER, DATEDIFF(QUARTER, -1
 set @key = 'EPS';
 --select @lastyearquarter,@prevquarterenddate
 
-select tbl2.Symbol,tbl2.[Key],tbl2.[QonQDiffPercent],tbl2.[PreviousQuarterDiffPercent] from (
+select 
+--tbl2.Symbol,
+tbl2.[Key]
+,tbl2.[QonQDiffPercent],tbl2.[PreviousQuarterDiffPercent] from (
 
 select tbl.*
 ,isnull(tbl.[Value],0) - isnull(tbl.QonQValue,0) as [QonQDifference]

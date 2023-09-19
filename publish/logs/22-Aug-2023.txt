@@ -1,0 +1,49 @@
+02:47:10 LOG: select
+ lot.* from dm_asset_core_lot lot
+ where lot.dm_asset_core_lot_id > 0
+ and lot.RecordDate >= '01/01/2020' 
+
+ order by lot.RecordDate desc,lot.dm_asset_core_lot_id desc 
+ OFFSET (0) * 20 ROWS 
+ FETCH NEXT 20 ROWS ONLY
+
+02:47:19 LOG: select
+ lot.* from dm_asset_core_lot lot
+ where lot.dm_asset_core_lot_id > 0
+ and lot.RecordDate >= '01/01/2020' 
+
+ order by lot.RecordDate desc,lot.dm_asset_core_lot_id desc 
+ OFFSET (0) * 500 ROWS 
+ FETCH NEXT 500 ROWS ONLY
+
+
+03:04:20 LOG: select
+ lot.* from dm_asset_core_lot lot
+ where lot.dm_asset_core_lot_id > 0
+ and lot.RecordDate >= '01/01/2020' 
+
+ order by lot.RecordDate desc,lot.dm_asset_core_lot_id desc 
+ OFFSET (0) * 20 ROWS 
+ FETCH NEXT 20 ROWS ONLY
+
+
+03:04:21 LOG: select
+ lot.* from dm_asset_core_lot lot
+ where lot.dm_asset_core_lot_id > 0
+ and lot.RecordDate >= '01/01/2020' 
+
+ order by lot.RecordDate desc,lot.dm_asset_core_lot_id desc 
+ OFFSET (0) * 20 ROWS 
+ FETCH NEXT 20 ROWS ONLY
+
+
+03:04:50 LOG: select
+ lot.* from dm_asset_core_lot lot
+ where lot.dm_asset_core_lot_id > 0
+ and lot.RecordDate >= '01/01/2020' 
+
+ order by lot.RecordDate desc,lot.dm_asset_core_lot_id desc 
+ OFFSET (0) * 20 ROWS 
+ FETCH NEXT 20 ROWS ONLY
+
+

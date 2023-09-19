@@ -1,4 +1,4 @@
-import { createRouter,createWebHistory} from 'vue-router'
+import { createRouter, createWebHistory } from 'vue-router'
 import store from '../store';
 const templateName = 'default';
 
@@ -69,6 +69,14 @@ const router = createRouter({
       meta: {
         requiresAuth: false
       }
+    },
+    {
+      path: '/tickerlist',
+      name: 'tickerlist',
+      component: () => import(`@/views/${templateName}/tickerlist`),
+      meta: {
+        requiresAuth: false
+      }
     }
   ]
 });
@@ -79,14 +87,14 @@ router.beforeEach((to, from) => {
   // console.log('beforeEach to.meta.requiresAuth=',to.meta.requiresAuth);
   // console.log('beforeEach store.state1=',store.state.loading);
   store.state.loading = true;
-  console.log('beforeEach store.state2=',store.state.loading);
+  console.log('beforeEach store.state2=', store.state.loading);
   if (to.meta.requiresAuth && !store.state.user) {
     return {
       name: 'login',
     }
   }
 });
-router.afterEach(()=>{
+router.afterEach(() => {
   // console.log('afterEach from=',from);
   // console.log('afterEach to=',to);
   store.state.loading = false;

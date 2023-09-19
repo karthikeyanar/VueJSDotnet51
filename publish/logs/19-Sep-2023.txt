@@ -1,0 +1,92 @@
+03:02:38 LOG: select
+ lot.* from dm_asset_core_lot lot
+ where lot.dm_asset_core_lot_id > 0
+ and lot.RecordDate >= '01/01/2020' 
+
+ order by lot.RecordDate desc,lot.dm_asset_core_lot_id desc 
+ OFFSET (0) * 20 ROWS 
+ FETCH NEXT 20 ROWS ONLY
+
+03:02:42 LOG: select
+ lot.* from dm_asset_core_lot lot
+ where lot.dm_asset_core_lot_id > 0
+ and lot.RecordDate >= '01/01/2020' 
+ and lot.LotType in ('B')
+
+ order by lot.RecordDate desc,lot.dm_asset_core_lot_id desc 
+ OFFSET (0) * 20 ROWS 
+ FETCH NEXT 20 ROWS ONLY
+
+
+03:02:45 LOG: select
+ lot.* from dm_asset_core_lot lot
+ where lot.dm_asset_core_lot_id > 0
+ and lot.RecordDate >= '01/01/2020' 
+ and lot.LotType in ('S')
+
+ order by lot.RecordDate desc,lot.dm_asset_core_lot_id desc 
+ OFFSET (0) * 20 ROWS 
+ FETCH NEXT 20 ROWS ONLY
+
+
+03:02:48 LOG: select
+ lot.* from dm_asset_core_lot lot
+ where lot.dm_asset_core_lot_id > 0
+ and lot.RecordDate >= '01/01/2020' 
+ and lot.LotType in ('B')
+
+ order by lot.RecordDate desc,lot.dm_asset_core_lot_id desc 
+ OFFSET (0) * 20 ROWS 
+ FETCH NEXT 20 ROWS ONLY
+
+
+03:02:51 LOG: select
+ lot.* from dm_asset_core_lot lot
+ where lot.dm_asset_core_lot_id > 0
+ and lot.RecordDate >= '01/01/2020' 
+
+ order by lot.RecordDate desc,lot.dm_asset_core_lot_id desc 
+ OFFSET (0) * 20 ROWS 
+ FETCH NEXT 20 ROWS ONLY
+
+
+03:02:56 LOG: select
+ lot.* from dm_asset_core_lot lot
+ where lot.dm_asset_core_lot_id > 0
+ and lot.RecordDate >= '01/01/2020' 
+
+ order by lot.RecordDate desc,lot.dm_asset_core_lot_id desc 
+ OFFSET (0) * 500 ROWS 
+ FETCH NEXT 500 ROWS ONLY
+
+
+03:11:53 LOG: select
+ lot.* from dm_asset_core_lot lot
+ where lot.dm_asset_core_lot_id > 0
+ and lot.RecordDate >= '01/01/2020' 
+
+ order by lot.RecordDate desc,lot.dm_asset_core_lot_id desc 
+ OFFSET (0) * 20 ROWS 
+ FETCH NEXT 20 ROWS ONLY
+
+
+03:13:54 LOG: select
+ lot.* from dm_asset_core_lot lot
+ where lot.dm_asset_core_lot_id > 0
+ and lot.RecordDate >= '01/01/2020' 
+
+ order by lot.RecordDate desc,lot.dm_asset_core_lot_id desc 
+ OFFSET (0) * 20 ROWS 
+ FETCH NEXT 20 ROWS ONLY
+
+
+03:13:57 LOG: select
+ lot.* from dm_asset_core_lot lot
+ where lot.dm_asset_core_lot_id > 0
+ and lot.RecordDate >= '01/01/2020' 
+
+ order by lot.RecordDate desc,lot.dm_asset_core_lot_id desc 
+ OFFSET (0) * 20 ROWS 
+ FETCH NEXT 20 ROWS ONLY
+
+

@@ -1,0 +1,81 @@
+02:46:36 LOG: select
+ lot.* from dm_asset_core_lot lot
+ where lot.dm_asset_core_lot_id > 0
+ and lot.RecordDate >= '01/01/2020' 
+
+ order by lot.RecordDate desc,lot.dm_asset_core_lot_id desc 
+ OFFSET (0) * 20 ROWS 
+ FETCH NEXT 20 ROWS ONLY
+
+02:46:41 LOG: select
+ lot.* from dm_asset_core_lot lot
+ where lot.dm_asset_core_lot_id > 0
+ and lot.RecordDate >= '01/01/2020' 
+ and lot.LotType in ('B')
+
+ order by lot.RecordDate desc,lot.dm_asset_core_lot_id desc 
+ OFFSET (0) * 20 ROWS 
+ FETCH NEXT 20 ROWS ONLY
+
+
+02:53:06 LOG: select
+ lot.* from dm_asset_core_lot lot
+ where lot.dm_asset_core_lot_id > 0
+ and lot.RecordDate >= '01/01/2020' 
+
+ order by lot.RecordDate desc,lot.dm_asset_core_lot_id desc 
+ OFFSET (0) * 20 ROWS 
+ FETCH NEXT 20 ROWS ONLY
+
+
+02:53:09 LOG: select
+ lot.* from dm_asset_core_lot lot
+ where lot.dm_asset_core_lot_id > 0
+ and lot.RecordDate >= '01/01/2020' 
+
+ order by lot.RecordDate desc,lot.dm_asset_core_lot_id desc 
+ OFFSET (0) * 20 ROWS 
+ FETCH NEXT 20 ROWS ONLY
+
+
+02:54:06 LOG: select
+ lot.* from dm_asset_core_lot lot
+ where lot.dm_asset_core_lot_id > 0
+ and lot.RecordDate >= '01/01/2020' 
+
+ order by lot.RecordDate desc,lot.dm_asset_core_lot_id desc 
+ OFFSET (0) * 20 ROWS 
+ FETCH NEXT 20 ROWS ONLY
+
+
+02:54:07 LOG: select
+ lot.* from dm_asset_core_lot lot
+ where lot.dm_asset_core_lot_id > 0
+ and lot.RecordDate >= '01/01/2020' 
+
+ order by lot.RecordDate desc,lot.dm_asset_core_lot_id desc 
+ OFFSET (0) * 20 ROWS 
+ FETCH NEXT 20 ROWS ONLY
+
+
+02:54:23 LOG: select
+ lot.* from dm_asset_core_lot lot
+ where lot.dm_asset_core_lot_id > 0
+ and lot.RecordDate >= '01/01/2020' 
+ and lot.Symbol in ('PGINVIT')
+
+ order by lot.RecordDate desc,lot.dm_asset_core_lot_id desc 
+ OFFSET (0) * 20 ROWS 
+ FETCH NEXT 20 ROWS ONLY
+
+
+02:55:42 LOG: select
+ lot.* from dm_asset_core_lot lot
+ where lot.dm_asset_core_lot_id > 0
+ and lot.RecordDate >= '01/01/2020' 
+
+ order by lot.RecordDate desc,lot.dm_asset_core_lot_id desc 
+ OFFSET (0) * 20 ROWS 
+ FETCH NEXT 20 ROWS ONLY
+
+

@@ -1,0 +1,1065 @@
+03:02:38 LOG: declare @TempSymbol as Table
+(
+ID INT IDENTITY(1, 1),
+Symbol varchar(200),
+LTCGShares decimal(19,8)
+); 
+insert into @TempSymbol(Symbol,LTCGShares)
+select tbl.Symbol,sum(tbl.LTCGShares) as LTCGShares from (
+select lot.Symbol, 
+lot.dm_asset_core_lot_id,lot.RecordDate,lot.NumberOfShares,lot.SharePrice
+,lot.LotType 
+,lot.BalanceShares
+,lot.AvgPrice
+,case when DATEADD(YEAR, 1, lot.RecordDate) < getdate() and lot.BalanceShares > 0 then 
+case when lot.LotType = 'B' then lot.NumberOfShares else lot.NumberOfShares * -1 end else 0 end as LTCGShares 
+from dm_asset_core_lot lot
+where lot.LotType in ('B','S') 
+and BalanceShares > 0 
+) as tbl 
+group by tbl.Symbol 
+
+select * from (select
+ lot.Symbol
+,lot.NumberOfShares
+,lot.SharePrice
+,lot.Amount
+,lot.XIRR
+,(lot.NumberOfShares * (select top 1 isnull(cp.SharePrice,0) as CurrentPrice from dm_asset_core_lot cp where cp.Symbol = lot.Symbol and cp.LotType != 'D' order by cp.RecordDate desc,cp.dm_asset_core_lot_id desc)) as CurrentMarketValue
+,(select top 1 isnull(cp.SharePrice,0) as CurrentPrice from dm_asset_core_lot cp where cp.Symbol = lot.Symbol and cp.LotType != 'D' order by cp.RecordDate desc,cp.dm_asset_core_lot_id desc) as CurrentPrice 
+,((lot.NumberOfShares * (select top 1 isnull(cp.SharePrice,0) as CurrentPrice from dm_asset_core_lot cp where cp.Symbol = lot.Symbol and cp.LotType != 'D' order by cp.RecordDate desc,cp.dm_asset_core_lot_id desc)) - (lot.NumberOfShares * lot.SharePrice)) as PL
+,(((lot.NumberOfShares * (select top 1 isnull(cp.SharePrice,0) as CurrentPrice from dm_asset_core_lot cp where cp.Symbol = lot.Symbol and cp.LotType != 'D' order by cp.RecordDate desc,cp.dm_asset_core_lot_id desc)) - (lot.NumberOfShares * lot.SharePrice)) / (lot.NumberOfShares * lot.SharePrice)) * 100 as PLPercent
+,ts.LTCGShares
+,si.[Value] as [Value]
+ from dm_asset_core_lot_share lot
+ left outer join dm_asset_core_symbol_index si on si.symbol = lot.symbol
+ join @TempSymbol ts on ts.Symbol = lot.Symbol
+ where lot.Symbol != ''
+ and lot.NumberOfShares >= 1
+
+) as tbl  order by PLPercent asc
+03:02:38 LOG: declare @TempSymbol as Table
+(
+ID INT IDENTITY(1, 1),
+Symbol varchar(200),
+LTCGShares decimal(19,8)
+); 
+insert into @TempSymbol(Symbol,LTCGShares)
+select tbl.Symbol,sum(tbl.LTCGShares) as LTCGShares from (
+select lot.Symbol, 
+lot.dm_asset_core_lot_id,lot.RecordDate,lot.NumberOfShares,lot.SharePrice
+,lot.LotType 
+,lot.BalanceShares
+,lot.AvgPrice
+,case when DATEADD(YEAR, 1, lot.RecordDate) < getdate() and lot.BalanceShares > 0 then 
+case when lot.LotType = 'B' then lot.NumberOfShares else lot.NumberOfShares * -1 end else 0 end as LTCGShares 
+from dm_asset_core_lot lot
+where lot.LotType in ('B','S') 
+and BalanceShares > 0 
+) as tbl 
+group by tbl.Symbol 
+
+select * from (select
+ lot.Symbol
+,lot.NumberOfShares
+,lot.SharePrice
+,lot.Amount
+,lot.XIRR
+,(lot.NumberOfShares * (select top 1 isnull(cp.SharePrice,0) as CurrentPrice from dm_asset_core_lot cp where cp.Symbol = lot.Symbol and cp.LotType != 'D' order by cp.RecordDate desc,cp.dm_asset_core_lot_id desc)) as CurrentMarketValue
+,(select top 1 isnull(cp.SharePrice,0) as CurrentPrice from dm_asset_core_lot cp where cp.Symbol = lot.Symbol and cp.LotType != 'D' order by cp.RecordDate desc,cp.dm_asset_core_lot_id desc) as CurrentPrice 
+,((lot.NumberOfShares * (select top 1 isnull(cp.SharePrice,0) as CurrentPrice from dm_asset_core_lot cp where cp.Symbol = lot.Symbol and cp.LotType != 'D' order by cp.RecordDate desc,cp.dm_asset_core_lot_id desc)) - (lot.NumberOfShares * lot.SharePrice)) as PL
+,(((lot.NumberOfShares * (select top 1 isnull(cp.SharePrice,0) as CurrentPrice from dm_asset_core_lot cp where cp.Symbol = lot.Symbol and cp.LotType != 'D' order by cp.RecordDate desc,cp.dm_asset_core_lot_id desc)) - (lot.NumberOfShares * lot.SharePrice)) / (lot.NumberOfShares * lot.SharePrice)) * 100 as PLPercent
+,ts.LTCGShares
+,si.[Value] as [Value]
+ from dm_asset_core_lot_share lot
+ left outer join dm_asset_core_symbol_index si on si.symbol = lot.symbol
+ join @TempSymbol ts on ts.Symbol = lot.Symbol
+ where lot.Symbol != ''
+ and lot.NumberOfShares >= 1
+
+) as tbl  order by PL asc
+
+03:02:42 LOG: declare @TempSymbol as Table
+(
+ID INT IDENTITY(1, 1),
+Symbol varchar(200),
+LTCGShares decimal(19,8)
+); 
+insert into @TempSymbol(Symbol,LTCGShares)
+select tbl.Symbol,sum(tbl.LTCGShares) as LTCGShares from (
+select lot.Symbol, 
+lot.dm_asset_core_lot_id,lot.RecordDate,lot.NumberOfShares,lot.SharePrice
+,lot.LotType 
+,lot.BalanceShares
+,lot.AvgPrice
+,case when DATEADD(YEAR, 1, lot.RecordDate) < getdate() and lot.BalanceShares > 0 then 
+case when lot.LotType = 'B' then lot.NumberOfShares else lot.NumberOfShares * -1 end else 0 end as LTCGShares 
+from dm_asset_core_lot lot
+where lot.LotType in ('B','S') 
+and BalanceShares > 0 
+) as tbl 
+group by tbl.Symbol 
+
+select * from (select
+ lot.Symbol
+,lot.NumberOfShares
+,lot.SharePrice
+,lot.Amount
+,lot.XIRR
+,(lot.NumberOfShares * (select top 1 isnull(cp.SharePrice,0) as CurrentPrice from dm_asset_core_lot cp where cp.Symbol = lot.Symbol and cp.LotType != 'D' order by cp.RecordDate desc,cp.dm_asset_core_lot_id desc)) as CurrentMarketValue
+,(select top 1 isnull(cp.SharePrice,0) as CurrentPrice from dm_asset_core_lot cp where cp.Symbol = lot.Symbol and cp.LotType != 'D' order by cp.RecordDate desc,cp.dm_asset_core_lot_id desc) as CurrentPrice 
+,((lot.NumberOfShares * (select top 1 isnull(cp.SharePrice,0) as CurrentPrice from dm_asset_core_lot cp where cp.Symbol = lot.Symbol and cp.LotType != 'D' order by cp.RecordDate desc,cp.dm_asset_core_lot_id desc)) - (lot.NumberOfShares * lot.SharePrice)) as PL
+,(((lot.NumberOfShares * (select top 1 isnull(cp.SharePrice,0) as CurrentPrice from dm_asset_core_lot cp where cp.Symbol = lot.Symbol and cp.LotType != 'D' order by cp.RecordDate desc,cp.dm_asset_core_lot_id desc)) - (lot.NumberOfShares * lot.SharePrice)) / (lot.NumberOfShares * lot.SharePrice)) * 100 as PLPercent
+,ts.LTCGShares
+,si.[Value] as [Value]
+ from dm_asset_core_lot_share lot
+ left outer join dm_asset_core_symbol_index si on si.symbol = lot.symbol
+ join @TempSymbol ts on ts.Symbol = lot.Symbol
+ where lot.Symbol != ''
+ and lot.NumberOfShares >= 1
+
+) as tbl  order by PLPercent asc
+
+03:02:42 LOG: declare @TempSymbol as Table
+(
+ID INT IDENTITY(1, 1),
+Symbol varchar(200),
+LTCGShares decimal(19,8)
+); 
+insert into @TempSymbol(Symbol,LTCGShares)
+select tbl.Symbol,sum(tbl.LTCGShares) as LTCGShares from (
+select lot.Symbol, 
+lot.dm_asset_core_lot_id,lot.RecordDate,lot.NumberOfShares,lot.SharePrice
+,lot.LotType 
+,lot.BalanceShares
+,lot.AvgPrice
+,case when DATEADD(YEAR, 1, lot.RecordDate) < getdate() and lot.BalanceShares > 0 then 
+case when lot.LotType = 'B' then lot.NumberOfShares else lot.NumberOfShares * -1 end else 0 end as LTCGShares 
+from dm_asset_core_lot lot
+where lot.LotType in ('B','S') 
+and BalanceShares > 0 
+) as tbl 
+group by tbl.Symbol 
+
+select * from (select
+ lot.Symbol
+,lot.NumberOfShares
+,lot.SharePrice
+,lot.Amount
+,lot.XIRR
+,(lot.NumberOfShares * (select top 1 isnull(cp.SharePrice,0) as CurrentPrice from dm_asset_core_lot cp where cp.Symbol = lot.Symbol and cp.LotType != 'D' order by cp.RecordDate desc,cp.dm_asset_core_lot_id desc)) as CurrentMarketValue
+,(select top 1 isnull(cp.SharePrice,0) as CurrentPrice from dm_asset_core_lot cp where cp.Symbol = lot.Symbol and cp.LotType != 'D' order by cp.RecordDate desc,cp.dm_asset_core_lot_id desc) as CurrentPrice 
+,((lot.NumberOfShares * (select top 1 isnull(cp.SharePrice,0) as CurrentPrice from dm_asset_core_lot cp where cp.Symbol = lot.Symbol and cp.LotType != 'D' order by cp.RecordDate desc,cp.dm_asset_core_lot_id desc)) - (lot.NumberOfShares * lot.SharePrice)) as PL
+,(((lot.NumberOfShares * (select top 1 isnull(cp.SharePrice,0) as CurrentPrice from dm_asset_core_lot cp where cp.Symbol = lot.Symbol and cp.LotType != 'D' order by cp.RecordDate desc,cp.dm_asset_core_lot_id desc)) - (lot.NumberOfShares * lot.SharePrice)) / (lot.NumberOfShares * lot.SharePrice)) * 100 as PLPercent
+,ts.LTCGShares
+,si.[Value] as [Value]
+ from dm_asset_core_lot_share lot
+ left outer join dm_asset_core_symbol_index si on si.symbol = lot.symbol
+ join @TempSymbol ts on ts.Symbol = lot.Symbol
+ where lot.Symbol != ''
+ and lot.NumberOfShares >= 1
+
+) as tbl  order by PL asc
+
+03:02:45 LOG: declare @TempSymbol as Table
+(
+ID INT IDENTITY(1, 1),
+Symbol varchar(200),
+LTCGShares decimal(19,8)
+); 
+insert into @TempSymbol(Symbol,LTCGShares)
+select tbl.Symbol,sum(tbl.LTCGShares) as LTCGShares from (
+select lot.Symbol, 
+lot.dm_asset_core_lot_id,lot.RecordDate,lot.NumberOfShares,lot.SharePrice
+,lot.LotType 
+,lot.BalanceShares
+,lot.AvgPrice
+,case when DATEADD(YEAR, 1, lot.RecordDate) < getdate() and lot.BalanceShares > 0 then 
+case when lot.LotType = 'B' then lot.NumberOfShares else lot.NumberOfShares * -1 end else 0 end as LTCGShares 
+from dm_asset_core_lot lot
+where lot.LotType in ('B','S') 
+and BalanceShares > 0 
+) as tbl 
+group by tbl.Symbol 
+
+select * from (select
+ lot.Symbol
+,lot.NumberOfShares
+,lot.SharePrice
+,lot.Amount
+,lot.XIRR
+,(lot.NumberOfShares * (select top 1 isnull(cp.SharePrice,0) as CurrentPrice from dm_asset_core_lot cp where cp.Symbol = lot.Symbol and cp.LotType != 'D' order by cp.RecordDate desc,cp.dm_asset_core_lot_id desc)) as CurrentMarketValue
+,(select top 1 isnull(cp.SharePrice,0) as CurrentPrice from dm_asset_core_lot cp where cp.Symbol = lot.Symbol and cp.LotType != 'D' order by cp.RecordDate desc,cp.dm_asset_core_lot_id desc) as CurrentPrice 
+,((lot.NumberOfShares * (select top 1 isnull(cp.SharePrice,0) as CurrentPrice from dm_asset_core_lot cp where cp.Symbol = lot.Symbol and cp.LotType != 'D' order by cp.RecordDate desc,cp.dm_asset_core_lot_id desc)) - (lot.NumberOfShares * lot.SharePrice)) as PL
+,(((lot.NumberOfShares * (select top 1 isnull(cp.SharePrice,0) as CurrentPrice from dm_asset_core_lot cp where cp.Symbol = lot.Symbol and cp.LotType != 'D' order by cp.RecordDate desc,cp.dm_asset_core_lot_id desc)) - (lot.NumberOfShares * lot.SharePrice)) / (lot.NumberOfShares * lot.SharePrice)) * 100 as PLPercent
+,ts.LTCGShares
+,si.[Value] as [Value]
+ from dm_asset_core_lot_share lot
+ left outer join dm_asset_core_symbol_index si on si.symbol = lot.symbol
+ join @TempSymbol ts on ts.Symbol = lot.Symbol
+ where lot.Symbol != ''
+ and lot.NumberOfShares >= 1
+
+) as tbl  order by PLPercent asc
+
+03:02:45 LOG: declare @TempSymbol as Table
+(
+ID INT IDENTITY(1, 1),
+Symbol varchar(200),
+LTCGShares decimal(19,8)
+); 
+insert into @TempSymbol(Symbol,LTCGShares)
+select tbl.Symbol,sum(tbl.LTCGShares) as LTCGShares from (
+select lot.Symbol, 
+lot.dm_asset_core_lot_id,lot.RecordDate,lot.NumberOfShares,lot.SharePrice
+,lot.LotType 
+,lot.BalanceShares
+,lot.AvgPrice
+,case when DATEADD(YEAR, 1, lot.RecordDate) < getdate() and lot.BalanceShares > 0 then 
+case when lot.LotType = 'B' then lot.NumberOfShares else lot.NumberOfShares * -1 end else 0 end as LTCGShares 
+from dm_asset_core_lot lot
+where lot.LotType in ('B','S') 
+and BalanceShares > 0 
+) as tbl 
+group by tbl.Symbol 
+
+select * from (select
+ lot.Symbol
+,lot.NumberOfShares
+,lot.SharePrice
+,lot.Amount
+,lot.XIRR
+,(lot.NumberOfShares * (select top 1 isnull(cp.SharePrice,0) as CurrentPrice from dm_asset_core_lot cp where cp.Symbol = lot.Symbol and cp.LotType != 'D' order by cp.RecordDate desc,cp.dm_asset_core_lot_id desc)) as CurrentMarketValue
+,(select top 1 isnull(cp.SharePrice,0) as CurrentPrice from dm_asset_core_lot cp where cp.Symbol = lot.Symbol and cp.LotType != 'D' order by cp.RecordDate desc,cp.dm_asset_core_lot_id desc) as CurrentPrice 
+,((lot.NumberOfShares * (select top 1 isnull(cp.SharePrice,0) as CurrentPrice from dm_asset_core_lot cp where cp.Symbol = lot.Symbol and cp.LotType != 'D' order by cp.RecordDate desc,cp.dm_asset_core_lot_id desc)) - (lot.NumberOfShares * lot.SharePrice)) as PL
+,(((lot.NumberOfShares * (select top 1 isnull(cp.SharePrice,0) as CurrentPrice from dm_asset_core_lot cp where cp.Symbol = lot.Symbol and cp.LotType != 'D' order by cp.RecordDate desc,cp.dm_asset_core_lot_id desc)) - (lot.NumberOfShares * lot.SharePrice)) / (lot.NumberOfShares * lot.SharePrice)) * 100 as PLPercent
+,ts.LTCGShares
+,si.[Value] as [Value]
+ from dm_asset_core_lot_share lot
+ left outer join dm_asset_core_symbol_index si on si.symbol = lot.symbol
+ join @TempSymbol ts on ts.Symbol = lot.Symbol
+ where lot.Symbol != ''
+ and lot.NumberOfShares >= 1
+
+) as tbl  order by PL asc
+
+03:02:48 LOG: declare @TempSymbol as Table
+(
+ID INT IDENTITY(1, 1),
+Symbol varchar(200),
+LTCGShares decimal(19,8)
+); 
+insert into @TempSymbol(Symbol,LTCGShares)
+select tbl.Symbol,sum(tbl.LTCGShares) as LTCGShares from (
+select lot.Symbol, 
+lot.dm_asset_core_lot_id,lot.RecordDate,lot.NumberOfShares,lot.SharePrice
+,lot.LotType 
+,lot.BalanceShares
+,lot.AvgPrice
+,case when DATEADD(YEAR, 1, lot.RecordDate) < getdate() and lot.BalanceShares > 0 then 
+case when lot.LotType = 'B' then lot.NumberOfShares else lot.NumberOfShares * -1 end else 0 end as LTCGShares 
+from dm_asset_core_lot lot
+where lot.LotType in ('B','S') 
+and BalanceShares > 0 
+) as tbl 
+group by tbl.Symbol 
+
+select * from (select
+ lot.Symbol
+,lot.NumberOfShares
+,lot.SharePrice
+,lot.Amount
+,lot.XIRR
+,(lot.NumberOfShares * (select top 1 isnull(cp.SharePrice,0) as CurrentPrice from dm_asset_core_lot cp where cp.Symbol = lot.Symbol and cp.LotType != 'D' order by cp.RecordDate desc,cp.dm_asset_core_lot_id desc)) as CurrentMarketValue
+,(select top 1 isnull(cp.SharePrice,0) as CurrentPrice from dm_asset_core_lot cp where cp.Symbol = lot.Symbol and cp.LotType != 'D' order by cp.RecordDate desc,cp.dm_asset_core_lot_id desc) as CurrentPrice 
+,((lot.NumberOfShares * (select top 1 isnull(cp.SharePrice,0) as CurrentPrice from dm_asset_core_lot cp where cp.Symbol = lot.Symbol and cp.LotType != 'D' order by cp.RecordDate desc,cp.dm_asset_core_lot_id desc)) - (lot.NumberOfShares * lot.SharePrice)) as PL
+,(((lot.NumberOfShares * (select top 1 isnull(cp.SharePrice,0) as CurrentPrice from dm_asset_core_lot cp where cp.Symbol = lot.Symbol and cp.LotType != 'D' order by cp.RecordDate desc,cp.dm_asset_core_lot_id desc)) - (lot.NumberOfShares * lot.SharePrice)) / (lot.NumberOfShares * lot.SharePrice)) * 100 as PLPercent
+,ts.LTCGShares
+,si.[Value] as [Value]
+ from dm_asset_core_lot_share lot
+ left outer join dm_asset_core_symbol_index si on si.symbol = lot.symbol
+ join @TempSymbol ts on ts.Symbol = lot.Symbol
+ where lot.Symbol != ''
+ and lot.NumberOfShares >= 1
+
+) as tbl  order by PLPercent asc
+
+03:02:48 LOG: declare @TempSymbol as Table
+(
+ID INT IDENTITY(1, 1),
+Symbol varchar(200),
+LTCGShares decimal(19,8)
+); 
+insert into @TempSymbol(Symbol,LTCGShares)
+select tbl.Symbol,sum(tbl.LTCGShares) as LTCGShares from (
+select lot.Symbol, 
+lot.dm_asset_core_lot_id,lot.RecordDate,lot.NumberOfShares,lot.SharePrice
+,lot.LotType 
+,lot.BalanceShares
+,lot.AvgPrice
+,case when DATEADD(YEAR, 1, lot.RecordDate) < getdate() and lot.BalanceShares > 0 then 
+case when lot.LotType = 'B' then lot.NumberOfShares else lot.NumberOfShares * -1 end else 0 end as LTCGShares 
+from dm_asset_core_lot lot
+where lot.LotType in ('B','S') 
+and BalanceShares > 0 
+) as tbl 
+group by tbl.Symbol 
+
+select * from (select
+ lot.Symbol
+,lot.NumberOfShares
+,lot.SharePrice
+,lot.Amount
+,lot.XIRR
+,(lot.NumberOfShares * (select top 1 isnull(cp.SharePrice,0) as CurrentPrice from dm_asset_core_lot cp where cp.Symbol = lot.Symbol and cp.LotType != 'D' order by cp.RecordDate desc,cp.dm_asset_core_lot_id desc)) as CurrentMarketValue
+,(select top 1 isnull(cp.SharePrice,0) as CurrentPrice from dm_asset_core_lot cp where cp.Symbol = lot.Symbol and cp.LotType != 'D' order by cp.RecordDate desc,cp.dm_asset_core_lot_id desc) as CurrentPrice 
+,((lot.NumberOfShares * (select top 1 isnull(cp.SharePrice,0) as CurrentPrice from dm_asset_core_lot cp where cp.Symbol = lot.Symbol and cp.LotType != 'D' order by cp.RecordDate desc,cp.dm_asset_core_lot_id desc)) - (lot.NumberOfShares * lot.SharePrice)) as PL
+,(((lot.NumberOfShares * (select top 1 isnull(cp.SharePrice,0) as CurrentPrice from dm_asset_core_lot cp where cp.Symbol = lot.Symbol and cp.LotType != 'D' order by cp.RecordDate desc,cp.dm_asset_core_lot_id desc)) - (lot.NumberOfShares * lot.SharePrice)) / (lot.NumberOfShares * lot.SharePrice)) * 100 as PLPercent
+,ts.LTCGShares
+,si.[Value] as [Value]
+ from dm_asset_core_lot_share lot
+ left outer join dm_asset_core_symbol_index si on si.symbol = lot.symbol
+ join @TempSymbol ts on ts.Symbol = lot.Symbol
+ where lot.Symbol != ''
+ and lot.NumberOfShares >= 1
+
+) as tbl  order by PL asc
+
+03:02:51 LOG: declare @TempSymbol as Table
+(
+ID INT IDENTITY(1, 1),
+Symbol varchar(200),
+LTCGShares decimal(19,8)
+); 
+insert into @TempSymbol(Symbol,LTCGShares)
+select tbl.Symbol,sum(tbl.LTCGShares) as LTCGShares from (
+select lot.Symbol, 
+lot.dm_asset_core_lot_id,lot.RecordDate,lot.NumberOfShares,lot.SharePrice
+,lot.LotType 
+,lot.BalanceShares
+,lot.AvgPrice
+,case when DATEADD(YEAR, 1, lot.RecordDate) < getdate() and lot.BalanceShares > 0 then 
+case when lot.LotType = 'B' then lot.NumberOfShares else lot.NumberOfShares * -1 end else 0 end as LTCGShares 
+from dm_asset_core_lot lot
+where lot.LotType in ('B','S') 
+and BalanceShares > 0 
+) as tbl 
+group by tbl.Symbol 
+
+select * from (select
+ lot.Symbol
+,lot.NumberOfShares
+,lot.SharePrice
+,lot.Amount
+,lot.XIRR
+,(lot.NumberOfShares * (select top 1 isnull(cp.SharePrice,0) as CurrentPrice from dm_asset_core_lot cp where cp.Symbol = lot.Symbol and cp.LotType != 'D' order by cp.RecordDate desc,cp.dm_asset_core_lot_id desc)) as CurrentMarketValue
+,(select top 1 isnull(cp.SharePrice,0) as CurrentPrice from dm_asset_core_lot cp where cp.Symbol = lot.Symbol and cp.LotType != 'D' order by cp.RecordDate desc,cp.dm_asset_core_lot_id desc) as CurrentPrice 
+,((lot.NumberOfShares * (select top 1 isnull(cp.SharePrice,0) as CurrentPrice from dm_asset_core_lot cp where cp.Symbol = lot.Symbol and cp.LotType != 'D' order by cp.RecordDate desc,cp.dm_asset_core_lot_id desc)) - (lot.NumberOfShares * lot.SharePrice)) as PL
+,(((lot.NumberOfShares * (select top 1 isnull(cp.SharePrice,0) as CurrentPrice from dm_asset_core_lot cp where cp.Symbol = lot.Symbol and cp.LotType != 'D' order by cp.RecordDate desc,cp.dm_asset_core_lot_id desc)) - (lot.NumberOfShares * lot.SharePrice)) / (lot.NumberOfShares * lot.SharePrice)) * 100 as PLPercent
+,ts.LTCGShares
+,si.[Value] as [Value]
+ from dm_asset_core_lot_share lot
+ left outer join dm_asset_core_symbol_index si on si.symbol = lot.symbol
+ join @TempSymbol ts on ts.Symbol = lot.Symbol
+ where lot.Symbol != ''
+ and lot.NumberOfShares >= 1
+
+) as tbl  order by PLPercent asc
+
+03:02:51 LOG: declare @TempSymbol as Table
+(
+ID INT IDENTITY(1, 1),
+Symbol varchar(200),
+LTCGShares decimal(19,8)
+); 
+insert into @TempSymbol(Symbol,LTCGShares)
+select tbl.Symbol,sum(tbl.LTCGShares) as LTCGShares from (
+select lot.Symbol, 
+lot.dm_asset_core_lot_id,lot.RecordDate,lot.NumberOfShares,lot.SharePrice
+,lot.LotType 
+,lot.BalanceShares
+,lot.AvgPrice
+,case when DATEADD(YEAR, 1, lot.RecordDate) < getdate() and lot.BalanceShares > 0 then 
+case when lot.LotType = 'B' then lot.NumberOfShares else lot.NumberOfShares * -1 end else 0 end as LTCGShares 
+from dm_asset_core_lot lot
+where lot.LotType in ('B','S') 
+and BalanceShares > 0 
+) as tbl 
+group by tbl.Symbol 
+
+select * from (select
+ lot.Symbol
+,lot.NumberOfShares
+,lot.SharePrice
+,lot.Amount
+,lot.XIRR
+,(lot.NumberOfShares * (select top 1 isnull(cp.SharePrice,0) as CurrentPrice from dm_asset_core_lot cp where cp.Symbol = lot.Symbol and cp.LotType != 'D' order by cp.RecordDate desc,cp.dm_asset_core_lot_id desc)) as CurrentMarketValue
+,(select top 1 isnull(cp.SharePrice,0) as CurrentPrice from dm_asset_core_lot cp where cp.Symbol = lot.Symbol and cp.LotType != 'D' order by cp.RecordDate desc,cp.dm_asset_core_lot_id desc) as CurrentPrice 
+,((lot.NumberOfShares * (select top 1 isnull(cp.SharePrice,0) as CurrentPrice from dm_asset_core_lot cp where cp.Symbol = lot.Symbol and cp.LotType != 'D' order by cp.RecordDate desc,cp.dm_asset_core_lot_id desc)) - (lot.NumberOfShares * lot.SharePrice)) as PL
+,(((lot.NumberOfShares * (select top 1 isnull(cp.SharePrice,0) as CurrentPrice from dm_asset_core_lot cp where cp.Symbol = lot.Symbol and cp.LotType != 'D' order by cp.RecordDate desc,cp.dm_asset_core_lot_id desc)) - (lot.NumberOfShares * lot.SharePrice)) / (lot.NumberOfShares * lot.SharePrice)) * 100 as PLPercent
+,ts.LTCGShares
+,si.[Value] as [Value]
+ from dm_asset_core_lot_share lot
+ left outer join dm_asset_core_symbol_index si on si.symbol = lot.symbol
+ join @TempSymbol ts on ts.Symbol = lot.Symbol
+ where lot.Symbol != ''
+ and lot.NumberOfShares >= 1
+
+) as tbl  order by PL asc
+
+03:02:56 LOG: declare @TempSymbol as Table
+(
+ID INT IDENTITY(1, 1),
+Symbol varchar(200),
+LTCGShares decimal(19,8)
+); 
+insert into @TempSymbol(Symbol,LTCGShares)
+select tbl.Symbol,sum(tbl.LTCGShares) as LTCGShares from (
+select lot.Symbol, 
+lot.dm_asset_core_lot_id,lot.RecordDate,lot.NumberOfShares,lot.SharePrice
+,lot.LotType 
+,lot.BalanceShares
+,lot.AvgPrice
+,case when DATEADD(YEAR, 1, lot.RecordDate) < getdate() and lot.BalanceShares > 0 then 
+case when lot.LotType = 'B' then lot.NumberOfShares else lot.NumberOfShares * -1 end else 0 end as LTCGShares 
+from dm_asset_core_lot lot
+where lot.LotType in ('B','S') 
+and BalanceShares > 0 
+) as tbl 
+group by tbl.Symbol 
+
+select * from (select
+ lot.Symbol
+,lot.NumberOfShares
+,lot.SharePrice
+,lot.Amount
+,lot.XIRR
+,(lot.NumberOfShares * (select top 1 isnull(cp.SharePrice,0) as CurrentPrice from dm_asset_core_lot cp where cp.Symbol = lot.Symbol and cp.LotType != 'D' order by cp.RecordDate desc,cp.dm_asset_core_lot_id desc)) as CurrentMarketValue
+,(select top 1 isnull(cp.SharePrice,0) as CurrentPrice from dm_asset_core_lot cp where cp.Symbol = lot.Symbol and cp.LotType != 'D' order by cp.RecordDate desc,cp.dm_asset_core_lot_id desc) as CurrentPrice 
+,((lot.NumberOfShares * (select top 1 isnull(cp.SharePrice,0) as CurrentPrice from dm_asset_core_lot cp where cp.Symbol = lot.Symbol and cp.LotType != 'D' order by cp.RecordDate desc,cp.dm_asset_core_lot_id desc)) - (lot.NumberOfShares * lot.SharePrice)) as PL
+,(((lot.NumberOfShares * (select top 1 isnull(cp.SharePrice,0) as CurrentPrice from dm_asset_core_lot cp where cp.Symbol = lot.Symbol and cp.LotType != 'D' order by cp.RecordDate desc,cp.dm_asset_core_lot_id desc)) - (lot.NumberOfShares * lot.SharePrice)) / (lot.NumberOfShares * lot.SharePrice)) * 100 as PLPercent
+,ts.LTCGShares
+,si.[Value] as [Value]
+ from dm_asset_core_lot_share lot
+ left outer join dm_asset_core_symbol_index si on si.symbol = lot.symbol
+ join @TempSymbol ts on ts.Symbol = lot.Symbol
+ where lot.Symbol != ''
+ and lot.NumberOfShares >= 1
+
+) as tbl  order by PLPercent asc
+
+03:02:56 LOG: declare @TempSymbol as Table
+(
+ID INT IDENTITY(1, 1),
+Symbol varchar(200),
+LTCGShares decimal(19,8)
+); 
+insert into @TempSymbol(Symbol,LTCGShares)
+select tbl.Symbol,sum(tbl.LTCGShares) as LTCGShares from (
+select lot.Symbol, 
+lot.dm_asset_core_lot_id,lot.RecordDate,lot.NumberOfShares,lot.SharePrice
+,lot.LotType 
+,lot.BalanceShares
+,lot.AvgPrice
+,case when DATEADD(YEAR, 1, lot.RecordDate) < getdate() and lot.BalanceShares > 0 then 
+case when lot.LotType = 'B' then lot.NumberOfShares else lot.NumberOfShares * -1 end else 0 end as LTCGShares 
+from dm_asset_core_lot lot
+where lot.LotType in ('B','S') 
+and BalanceShares > 0 
+) as tbl 
+group by tbl.Symbol 
+
+select * from (select
+ lot.Symbol
+,lot.NumberOfShares
+,lot.SharePrice
+,lot.Amount
+,lot.XIRR
+,(lot.NumberOfShares * (select top 1 isnull(cp.SharePrice,0) as CurrentPrice from dm_asset_core_lot cp where cp.Symbol = lot.Symbol and cp.LotType != 'D' order by cp.RecordDate desc,cp.dm_asset_core_lot_id desc)) as CurrentMarketValue
+,(select top 1 isnull(cp.SharePrice,0) as CurrentPrice from dm_asset_core_lot cp where cp.Symbol = lot.Symbol and cp.LotType != 'D' order by cp.RecordDate desc,cp.dm_asset_core_lot_id desc) as CurrentPrice 
+,((lot.NumberOfShares * (select top 1 isnull(cp.SharePrice,0) as CurrentPrice from dm_asset_core_lot cp where cp.Symbol = lot.Symbol and cp.LotType != 'D' order by cp.RecordDate desc,cp.dm_asset_core_lot_id desc)) - (lot.NumberOfShares * lot.SharePrice)) as PL
+,(((lot.NumberOfShares * (select top 1 isnull(cp.SharePrice,0) as CurrentPrice from dm_asset_core_lot cp where cp.Symbol = lot.Symbol and cp.LotType != 'D' order by cp.RecordDate desc,cp.dm_asset_core_lot_id desc)) - (lot.NumberOfShares * lot.SharePrice)) / (lot.NumberOfShares * lot.SharePrice)) * 100 as PLPercent
+,ts.LTCGShares
+,si.[Value] as [Value]
+ from dm_asset_core_lot_share lot
+ left outer join dm_asset_core_symbol_index si on si.symbol = lot.symbol
+ join @TempSymbol ts on ts.Symbol = lot.Symbol
+ where lot.Symbol != ''
+ and lot.NumberOfShares >= 1
+
+) as tbl  order by PL asc
+
+03:11:53 LOG: declare @TempSymbol as Table
+(
+ID INT IDENTITY(1, 1),
+Symbol varchar(200),
+LTCGShares decimal(19,8)
+); 
+insert into @TempSymbol(Symbol,LTCGShares)
+select tbl.Symbol,sum(tbl.LTCGShares) as LTCGShares from (
+select lot.Symbol, 
+lot.dm_asset_core_lot_id,lot.RecordDate,lot.NumberOfShares,lot.SharePrice
+,lot.LotType 
+,lot.BalanceShares
+,lot.AvgPrice
+,case when DATEADD(YEAR, 1, lot.RecordDate) < getdate() and lot.BalanceShares > 0 then 
+case when lot.LotType = 'B' then lot.NumberOfShares else lot.NumberOfShares * -1 end else 0 end as LTCGShares 
+from dm_asset_core_lot lot
+where lot.LotType in ('B','S') 
+and BalanceShares > 0 
+) as tbl 
+group by tbl.Symbol 
+
+select * from (select
+ lot.Symbol
+,lot.NumberOfShares
+,lot.SharePrice
+,lot.Amount
+,lot.XIRR
+,(lot.NumberOfShares * (select top 1 isnull(cp.SharePrice,0) as CurrentPrice from dm_asset_core_lot cp where cp.Symbol = lot.Symbol and cp.LotType != 'D' order by cp.RecordDate desc,cp.dm_asset_core_lot_id desc)) as CurrentMarketValue
+,(select top 1 isnull(cp.SharePrice,0) as CurrentPrice from dm_asset_core_lot cp where cp.Symbol = lot.Symbol and cp.LotType != 'D' order by cp.RecordDate desc,cp.dm_asset_core_lot_id desc) as CurrentPrice 
+,((lot.NumberOfShares * (select top 1 isnull(cp.SharePrice,0) as CurrentPrice from dm_asset_core_lot cp where cp.Symbol = lot.Symbol and cp.LotType != 'D' order by cp.RecordDate desc,cp.dm_asset_core_lot_id desc)) - (lot.NumberOfShares * lot.SharePrice)) as PL
+,(((lot.NumberOfShares * (select top 1 isnull(cp.SharePrice,0) as CurrentPrice from dm_asset_core_lot cp where cp.Symbol = lot.Symbol and cp.LotType != 'D' order by cp.RecordDate desc,cp.dm_asset_core_lot_id desc)) - (lot.NumberOfShares * lot.SharePrice)) / (lot.NumberOfShares * lot.SharePrice)) * 100 as PLPercent
+,ts.LTCGShares
+,si.[Value] as [Value]
+ from dm_asset_core_lot_share lot
+ left outer join dm_asset_core_symbol_index si on si.symbol = lot.symbol
+ join @TempSymbol ts on ts.Symbol = lot.Symbol
+ where lot.Symbol != ''
+ and lot.NumberOfShares >= 1
+
+) as tbl  order by PLPercent asc
+
+03:11:53 LOG: declare @TempSymbol as Table
+(
+ID INT IDENTITY(1, 1),
+Symbol varchar(200),
+LTCGShares decimal(19,8)
+); 
+insert into @TempSymbol(Symbol,LTCGShares)
+select tbl.Symbol,sum(tbl.LTCGShares) as LTCGShares from (
+select lot.Symbol, 
+lot.dm_asset_core_lot_id,lot.RecordDate,lot.NumberOfShares,lot.SharePrice
+,lot.LotType 
+,lot.BalanceShares
+,lot.AvgPrice
+,case when DATEADD(YEAR, 1, lot.RecordDate) < getdate() and lot.BalanceShares > 0 then 
+case when lot.LotType = 'B' then lot.NumberOfShares else lot.NumberOfShares * -1 end else 0 end as LTCGShares 
+from dm_asset_core_lot lot
+where lot.LotType in ('B','S') 
+and BalanceShares > 0 
+) as tbl 
+group by tbl.Symbol 
+
+select * from (select
+ lot.Symbol
+,lot.NumberOfShares
+,lot.SharePrice
+,lot.Amount
+,lot.XIRR
+,(lot.NumberOfShares * (select top 1 isnull(cp.SharePrice,0) as CurrentPrice from dm_asset_core_lot cp where cp.Symbol = lot.Symbol and cp.LotType != 'D' order by cp.RecordDate desc,cp.dm_asset_core_lot_id desc)) as CurrentMarketValue
+,(select top 1 isnull(cp.SharePrice,0) as CurrentPrice from dm_asset_core_lot cp where cp.Symbol = lot.Symbol and cp.LotType != 'D' order by cp.RecordDate desc,cp.dm_asset_core_lot_id desc) as CurrentPrice 
+,((lot.NumberOfShares * (select top 1 isnull(cp.SharePrice,0) as CurrentPrice from dm_asset_core_lot cp where cp.Symbol = lot.Symbol and cp.LotType != 'D' order by cp.RecordDate desc,cp.dm_asset_core_lot_id desc)) - (lot.NumberOfShares * lot.SharePrice)) as PL
+,(((lot.NumberOfShares * (select top 1 isnull(cp.SharePrice,0) as CurrentPrice from dm_asset_core_lot cp where cp.Symbol = lot.Symbol and cp.LotType != 'D' order by cp.RecordDate desc,cp.dm_asset_core_lot_id desc)) - (lot.NumberOfShares * lot.SharePrice)) / (lot.NumberOfShares * lot.SharePrice)) * 100 as PLPercent
+,ts.LTCGShares
+,si.[Value] as [Value]
+ from dm_asset_core_lot_share lot
+ left outer join dm_asset_core_symbol_index si on si.symbol = lot.symbol
+ join @TempSymbol ts on ts.Symbol = lot.Symbol
+ where lot.Symbol != ''
+ and lot.NumberOfShares >= 1
+
+) as tbl  order by PL asc
+
+03:12:05 LOG: declare @TempSymbol as Table
+(
+ID INT IDENTITY(1, 1),
+Symbol varchar(200),
+LTCGShares decimal(19,8)
+); 
+insert into @TempSymbol(Symbol,LTCGShares)
+select tbl.Symbol,sum(tbl.LTCGShares) as LTCGShares from (
+select lot.Symbol, 
+lot.dm_asset_core_lot_id,lot.RecordDate,lot.NumberOfShares,lot.SharePrice
+,lot.LotType 
+,lot.BalanceShares
+,lot.AvgPrice
+,case when DATEADD(YEAR, 1, lot.RecordDate) < getdate() and lot.BalanceShares > 0 then 
+case when lot.LotType = 'B' then lot.NumberOfShares else lot.NumberOfShares * -1 end else 0 end as LTCGShares 
+from dm_asset_core_lot lot
+where lot.LotType in ('B','S') 
+and BalanceShares > 0 
+) as tbl 
+group by tbl.Symbol 
+
+select * from (select
+ lot.Symbol
+,lot.NumberOfShares
+,lot.SharePrice
+,lot.Amount
+,lot.XIRR
+,(lot.NumberOfShares * (select top 1 isnull(cp.SharePrice,0) as CurrentPrice from dm_asset_core_lot cp where cp.Symbol = lot.Symbol and cp.LotType != 'D' order by cp.RecordDate desc,cp.dm_asset_core_lot_id desc)) as CurrentMarketValue
+,(select top 1 isnull(cp.SharePrice,0) as CurrentPrice from dm_asset_core_lot cp where cp.Symbol = lot.Symbol and cp.LotType != 'D' order by cp.RecordDate desc,cp.dm_asset_core_lot_id desc) as CurrentPrice 
+,((lot.NumberOfShares * (select top 1 isnull(cp.SharePrice,0) as CurrentPrice from dm_asset_core_lot cp where cp.Symbol = lot.Symbol and cp.LotType != 'D' order by cp.RecordDate desc,cp.dm_asset_core_lot_id desc)) - (lot.NumberOfShares * lot.SharePrice)) as PL
+,(((lot.NumberOfShares * (select top 1 isnull(cp.SharePrice,0) as CurrentPrice from dm_asset_core_lot cp where cp.Symbol = lot.Symbol and cp.LotType != 'D' order by cp.RecordDate desc,cp.dm_asset_core_lot_id desc)) - (lot.NumberOfShares * lot.SharePrice)) / (lot.NumberOfShares * lot.SharePrice)) * 100 as PLPercent
+,ts.LTCGShares
+,si.[Value] as [Value]
+ from dm_asset_core_lot_share lot
+ left outer join dm_asset_core_symbol_index si on si.symbol = lot.symbol
+ join @TempSymbol ts on ts.Symbol = lot.Symbol
+ where lot.Symbol != ''
+ and lot.NumberOfShares >= 1
+
+) as tbl  order by PLPercent asc
+
+03:12:07 LOG: declare @TempSymbol as Table
+(
+ID INT IDENTITY(1, 1),
+Symbol varchar(200),
+LTCGShares decimal(19,8)
+); 
+insert into @TempSymbol(Symbol,LTCGShares)
+select tbl.Symbol,sum(tbl.LTCGShares) as LTCGShares from (
+select lot.Symbol, 
+lot.dm_asset_core_lot_id,lot.RecordDate,lot.NumberOfShares,lot.SharePrice
+,lot.LotType 
+,lot.BalanceShares
+,lot.AvgPrice
+,case when DATEADD(YEAR, 1, lot.RecordDate) < getdate() and lot.BalanceShares > 0 then 
+case when lot.LotType = 'B' then lot.NumberOfShares else lot.NumberOfShares * -1 end else 0 end as LTCGShares 
+from dm_asset_core_lot lot
+where lot.LotType in ('B','S') 
+and BalanceShares > 0 
+) as tbl 
+group by tbl.Symbol 
+
+select * from (select
+ lot.Symbol
+,lot.NumberOfShares
+,lot.SharePrice
+,lot.Amount
+,lot.XIRR
+,(lot.NumberOfShares * (select top 1 isnull(cp.SharePrice,0) as CurrentPrice from dm_asset_core_lot cp where cp.Symbol = lot.Symbol and cp.LotType != 'D' order by cp.RecordDate desc,cp.dm_asset_core_lot_id desc)) as CurrentMarketValue
+,(select top 1 isnull(cp.SharePrice,0) as CurrentPrice from dm_asset_core_lot cp where cp.Symbol = lot.Symbol and cp.LotType != 'D' order by cp.RecordDate desc,cp.dm_asset_core_lot_id desc) as CurrentPrice 
+,((lot.NumberOfShares * (select top 1 isnull(cp.SharePrice,0) as CurrentPrice from dm_asset_core_lot cp where cp.Symbol = lot.Symbol and cp.LotType != 'D' order by cp.RecordDate desc,cp.dm_asset_core_lot_id desc)) - (lot.NumberOfShares * lot.SharePrice)) as PL
+,(((lot.NumberOfShares * (select top 1 isnull(cp.SharePrice,0) as CurrentPrice from dm_asset_core_lot cp where cp.Symbol = lot.Symbol and cp.LotType != 'D' order by cp.RecordDate desc,cp.dm_asset_core_lot_id desc)) - (lot.NumberOfShares * lot.SharePrice)) / (lot.NumberOfShares * lot.SharePrice)) * 100 as PLPercent
+,ts.LTCGShares
+,si.[Value] as [Value]
+ from dm_asset_core_lot_share lot
+ left outer join dm_asset_core_symbol_index si on si.symbol = lot.symbol
+ join @TempSymbol ts on ts.Symbol = lot.Symbol
+ where lot.Symbol != ''
+ and lot.NumberOfShares >= 1
+
+) as tbl  order by PLPercent desc
+
+03:12:13 LOG: declare @TempSymbol as Table
+(
+ID INT IDENTITY(1, 1),
+Symbol varchar(200),
+LTCGShares decimal(19,8)
+); 
+insert into @TempSymbol(Symbol,LTCGShares)
+select tbl.Symbol,sum(tbl.LTCGShares) as LTCGShares from (
+select lot.Symbol, 
+lot.dm_asset_core_lot_id,lot.RecordDate,lot.NumberOfShares,lot.SharePrice
+,lot.LotType 
+,lot.BalanceShares
+,lot.AvgPrice
+,case when DATEADD(YEAR, 1, lot.RecordDate) < getdate() and lot.BalanceShares > 0 then 
+case when lot.LotType = 'B' then lot.NumberOfShares else lot.NumberOfShares * -1 end else 0 end as LTCGShares 
+from dm_asset_core_lot lot
+where lot.LotType in ('B','S') 
+and BalanceShares > 0 
+) as tbl 
+group by tbl.Symbol 
+
+select * from (select
+ lot.Symbol
+,lot.NumberOfShares
+,lot.SharePrice
+,lot.Amount
+,lot.XIRR
+,(lot.NumberOfShares * (select top 1 isnull(cp.SharePrice,0) as CurrentPrice from dm_asset_core_lot cp where cp.Symbol = lot.Symbol and cp.LotType != 'D' order by cp.RecordDate desc,cp.dm_asset_core_lot_id desc)) as CurrentMarketValue
+,(select top 1 isnull(cp.SharePrice,0) as CurrentPrice from dm_asset_core_lot cp where cp.Symbol = lot.Symbol and cp.LotType != 'D' order by cp.RecordDate desc,cp.dm_asset_core_lot_id desc) as CurrentPrice 
+,((lot.NumberOfShares * (select top 1 isnull(cp.SharePrice,0) as CurrentPrice from dm_asset_core_lot cp where cp.Symbol = lot.Symbol and cp.LotType != 'D' order by cp.RecordDate desc,cp.dm_asset_core_lot_id desc)) - (lot.NumberOfShares * lot.SharePrice)) as PL
+,(((lot.NumberOfShares * (select top 1 isnull(cp.SharePrice,0) as CurrentPrice from dm_asset_core_lot cp where cp.Symbol = lot.Symbol and cp.LotType != 'D' order by cp.RecordDate desc,cp.dm_asset_core_lot_id desc)) - (lot.NumberOfShares * lot.SharePrice)) / (lot.NumberOfShares * lot.SharePrice)) * 100 as PLPercent
+,ts.LTCGShares
+,si.[Value] as [Value]
+ from dm_asset_core_lot_share lot
+ left outer join dm_asset_core_symbol_index si on si.symbol = lot.symbol
+ join @TempSymbol ts on ts.Symbol = lot.Symbol
+ where lot.Symbol != ''
+ and lot.NumberOfShares >= 1
+
+) as tbl  order by PLPercent asc
+
+03:12:15 LOG: declare @TempSymbol as Table
+(
+ID INT IDENTITY(1, 1),
+Symbol varchar(200),
+LTCGShares decimal(19,8)
+); 
+insert into @TempSymbol(Symbol,LTCGShares)
+select tbl.Symbol,sum(tbl.LTCGShares) as LTCGShares from (
+select lot.Symbol, 
+lot.dm_asset_core_lot_id,lot.RecordDate,lot.NumberOfShares,lot.SharePrice
+,lot.LotType 
+,lot.BalanceShares
+,lot.AvgPrice
+,case when DATEADD(YEAR, 1, lot.RecordDate) < getdate() and lot.BalanceShares > 0 then 
+case when lot.LotType = 'B' then lot.NumberOfShares else lot.NumberOfShares * -1 end else 0 end as LTCGShares 
+from dm_asset_core_lot lot
+where lot.LotType in ('B','S') 
+and BalanceShares > 0 
+) as tbl 
+group by tbl.Symbol 
+
+select * from (select
+ lot.Symbol
+,lot.NumberOfShares
+,lot.SharePrice
+,lot.Amount
+,lot.XIRR
+,(lot.NumberOfShares * (select top 1 isnull(cp.SharePrice,0) as CurrentPrice from dm_asset_core_lot cp where cp.Symbol = lot.Symbol and cp.LotType != 'D' order by cp.RecordDate desc,cp.dm_asset_core_lot_id desc)) as CurrentMarketValue
+,(select top 1 isnull(cp.SharePrice,0) as CurrentPrice from dm_asset_core_lot cp where cp.Symbol = lot.Symbol and cp.LotType != 'D' order by cp.RecordDate desc,cp.dm_asset_core_lot_id desc) as CurrentPrice 
+,((lot.NumberOfShares * (select top 1 isnull(cp.SharePrice,0) as CurrentPrice from dm_asset_core_lot cp where cp.Symbol = lot.Symbol and cp.LotType != 'D' order by cp.RecordDate desc,cp.dm_asset_core_lot_id desc)) - (lot.NumberOfShares * lot.SharePrice)) as PL
+,(((lot.NumberOfShares * (select top 1 isnull(cp.SharePrice,0) as CurrentPrice from dm_asset_core_lot cp where cp.Symbol = lot.Symbol and cp.LotType != 'D' order by cp.RecordDate desc,cp.dm_asset_core_lot_id desc)) - (lot.NumberOfShares * lot.SharePrice)) / (lot.NumberOfShares * lot.SharePrice)) * 100 as PLPercent
+,ts.LTCGShares
+,si.[Value] as [Value]
+ from dm_asset_core_lot_share lot
+ left outer join dm_asset_core_symbol_index si on si.symbol = lot.symbol
+ join @TempSymbol ts on ts.Symbol = lot.Symbol
+ where lot.Symbol != ''
+ and lot.NumberOfShares >= 1
+
+) as tbl  order by PLPercent desc
+
+03:12:28 LOG: declare @TempSymbol as Table
+(
+ID INT IDENTITY(1, 1),
+Symbol varchar(200),
+LTCGShares decimal(19,8)
+); 
+insert into @TempSymbol(Symbol,LTCGShares)
+select tbl.Symbol,sum(tbl.LTCGShares) as LTCGShares from (
+select lot.Symbol, 
+lot.dm_asset_core_lot_id,lot.RecordDate,lot.NumberOfShares,lot.SharePrice
+,lot.LotType 
+,lot.BalanceShares
+,lot.AvgPrice
+,case when DATEADD(YEAR, 1, lot.RecordDate) < getdate() and lot.BalanceShares > 0 then 
+case when lot.LotType = 'B' then lot.NumberOfShares else lot.NumberOfShares * -1 end else 0 end as LTCGShares 
+from dm_asset_core_lot lot
+where lot.LotType in ('B','S') 
+and BalanceShares > 0 
+) as tbl 
+group by tbl.Symbol 
+
+select * from (select
+ lot.Symbol
+,lot.NumberOfShares
+,lot.SharePrice
+,lot.Amount
+,lot.XIRR
+,(lot.NumberOfShares * (select top 1 isnull(cp.SharePrice,0) as CurrentPrice from dm_asset_core_lot cp where cp.Symbol = lot.Symbol and cp.LotType != 'D' order by cp.RecordDate desc,cp.dm_asset_core_lot_id desc)) as CurrentMarketValue
+,(select top 1 isnull(cp.SharePrice,0) as CurrentPrice from dm_asset_core_lot cp where cp.Symbol = lot.Symbol and cp.LotType != 'D' order by cp.RecordDate desc,cp.dm_asset_core_lot_id desc) as CurrentPrice 
+,((lot.NumberOfShares * (select top 1 isnull(cp.SharePrice,0) as CurrentPrice from dm_asset_core_lot cp where cp.Symbol = lot.Symbol and cp.LotType != 'D' order by cp.RecordDate desc,cp.dm_asset_core_lot_id desc)) - (lot.NumberOfShares * lot.SharePrice)) as PL
+,(((lot.NumberOfShares * (select top 1 isnull(cp.SharePrice,0) as CurrentPrice from dm_asset_core_lot cp where cp.Symbol = lot.Symbol and cp.LotType != 'D' order by cp.RecordDate desc,cp.dm_asset_core_lot_id desc)) - (lot.NumberOfShares * lot.SharePrice)) / (lot.NumberOfShares * lot.SharePrice)) * 100 as PLPercent
+,ts.LTCGShares
+,si.[Value] as [Value]
+ from dm_asset_core_lot_share lot
+ left outer join dm_asset_core_symbol_index si on si.symbol = lot.symbol
+ join @TempSymbol ts on ts.Symbol = lot.Symbol
+ where lot.Symbol != ''
+ and lot.NumberOfShares >= 1
+
+) as tbl  order by Amount desc
+
+03:12:42 LOG: declare @TempSymbol as Table
+(
+ID INT IDENTITY(1, 1),
+Symbol varchar(200),
+LTCGShares decimal(19,8)
+); 
+insert into @TempSymbol(Symbol,LTCGShares)
+select tbl.Symbol,sum(tbl.LTCGShares) as LTCGShares from (
+select lot.Symbol, 
+lot.dm_asset_core_lot_id,lot.RecordDate,lot.NumberOfShares,lot.SharePrice
+,lot.LotType 
+,lot.BalanceShares
+,lot.AvgPrice
+,case when DATEADD(YEAR, 1, lot.RecordDate) < getdate() and lot.BalanceShares > 0 then 
+case when lot.LotType = 'B' then lot.NumberOfShares else lot.NumberOfShares * -1 end else 0 end as LTCGShares 
+from dm_asset_core_lot lot
+where lot.LotType in ('B','S') 
+and BalanceShares > 0 
+) as tbl 
+group by tbl.Symbol 
+
+select * from (select
+ lot.Symbol
+,lot.NumberOfShares
+,lot.SharePrice
+,lot.Amount
+,lot.XIRR
+,(lot.NumberOfShares * (select top 1 isnull(cp.SharePrice,0) as CurrentPrice from dm_asset_core_lot cp where cp.Symbol = lot.Symbol and cp.LotType != 'D' order by cp.RecordDate desc,cp.dm_asset_core_lot_id desc)) as CurrentMarketValue
+,(select top 1 isnull(cp.SharePrice,0) as CurrentPrice from dm_asset_core_lot cp where cp.Symbol = lot.Symbol and cp.LotType != 'D' order by cp.RecordDate desc,cp.dm_asset_core_lot_id desc) as CurrentPrice 
+,((lot.NumberOfShares * (select top 1 isnull(cp.SharePrice,0) as CurrentPrice from dm_asset_core_lot cp where cp.Symbol = lot.Symbol and cp.LotType != 'D' order by cp.RecordDate desc,cp.dm_asset_core_lot_id desc)) - (lot.NumberOfShares * lot.SharePrice)) as PL
+,(((lot.NumberOfShares * (select top 1 isnull(cp.SharePrice,0) as CurrentPrice from dm_asset_core_lot cp where cp.Symbol = lot.Symbol and cp.LotType != 'D' order by cp.RecordDate desc,cp.dm_asset_core_lot_id desc)) - (lot.NumberOfShares * lot.SharePrice)) / (lot.NumberOfShares * lot.SharePrice)) * 100 as PLPercent
+,ts.LTCGShares
+,si.[Value] as [Value]
+ from dm_asset_core_lot_share lot
+ left outer join dm_asset_core_symbol_index si on si.symbol = lot.symbol
+ join @TempSymbol ts on ts.Symbol = lot.Symbol
+ where lot.Symbol != ''
+ and lot.NumberOfShares >= 1
+
+) as tbl  order by CurrentMarketValue desc
+
+03:12:46 LOG: declare @TempSymbol as Table
+(
+ID INT IDENTITY(1, 1),
+Symbol varchar(200),
+LTCGShares decimal(19,8)
+); 
+insert into @TempSymbol(Symbol,LTCGShares)
+select tbl.Symbol,sum(tbl.LTCGShares) as LTCGShares from (
+select lot.Symbol, 
+lot.dm_asset_core_lot_id,lot.RecordDate,lot.NumberOfShares,lot.SharePrice
+,lot.LotType 
+,lot.BalanceShares
+,lot.AvgPrice
+,case when DATEADD(YEAR, 1, lot.RecordDate) < getdate() and lot.BalanceShares > 0 then 
+case when lot.LotType = 'B' then lot.NumberOfShares else lot.NumberOfShares * -1 end else 0 end as LTCGShares 
+from dm_asset_core_lot lot
+where lot.LotType in ('B','S') 
+and BalanceShares > 0 
+) as tbl 
+group by tbl.Symbol 
+
+select * from (select
+ lot.Symbol
+,lot.NumberOfShares
+,lot.SharePrice
+,lot.Amount
+,lot.XIRR
+,(lot.NumberOfShares * (select top 1 isnull(cp.SharePrice,0) as CurrentPrice from dm_asset_core_lot cp where cp.Symbol = lot.Symbol and cp.LotType != 'D' order by cp.RecordDate desc,cp.dm_asset_core_lot_id desc)) as CurrentMarketValue
+,(select top 1 isnull(cp.SharePrice,0) as CurrentPrice from dm_asset_core_lot cp where cp.Symbol = lot.Symbol and cp.LotType != 'D' order by cp.RecordDate desc,cp.dm_asset_core_lot_id desc) as CurrentPrice 
+,((lot.NumberOfShares * (select top 1 isnull(cp.SharePrice,0) as CurrentPrice from dm_asset_core_lot cp where cp.Symbol = lot.Symbol and cp.LotType != 'D' order by cp.RecordDate desc,cp.dm_asset_core_lot_id desc)) - (lot.NumberOfShares * lot.SharePrice)) as PL
+,(((lot.NumberOfShares * (select top 1 isnull(cp.SharePrice,0) as CurrentPrice from dm_asset_core_lot cp where cp.Symbol = lot.Symbol and cp.LotType != 'D' order by cp.RecordDate desc,cp.dm_asset_core_lot_id desc)) - (lot.NumberOfShares * lot.SharePrice)) / (lot.NumberOfShares * lot.SharePrice)) * 100 as PLPercent
+,ts.LTCGShares
+,si.[Value] as [Value]
+ from dm_asset_core_lot_share lot
+ left outer join dm_asset_core_symbol_index si on si.symbol = lot.symbol
+ join @TempSymbol ts on ts.Symbol = lot.Symbol
+ where lot.Symbol != ''
+ and lot.NumberOfShares >= 1
+
+) as tbl  order by PL desc
+
+03:13:54 LOG: declare @TempSymbol as Table
+(
+ID INT IDENTITY(1, 1),
+Symbol varchar(200),
+LTCGShares decimal(19,8)
+); 
+insert into @TempSymbol(Symbol,LTCGShares)
+select tbl.Symbol,sum(tbl.LTCGShares) as LTCGShares from (
+select lot.Symbol, 
+lot.dm_asset_core_lot_id,lot.RecordDate,lot.NumberOfShares,lot.SharePrice
+,lot.LotType 
+,lot.BalanceShares
+,lot.AvgPrice
+,case when DATEADD(YEAR, 1, lot.RecordDate) < getdate() and lot.BalanceShares > 0 then 
+case when lot.LotType = 'B' then lot.NumberOfShares else lot.NumberOfShares * -1 end else 0 end as LTCGShares 
+from dm_asset_core_lot lot
+where lot.LotType in ('B','S') 
+and BalanceShares > 0 
+) as tbl 
+group by tbl.Symbol 
+
+select * from (select
+ lot.Symbol
+,lot.NumberOfShares
+,lot.SharePrice
+,lot.Amount
+,lot.XIRR
+,(lot.NumberOfShares * (select top 1 isnull(cp.SharePrice,0) as CurrentPrice from dm_asset_core_lot cp where cp.Symbol = lot.Symbol and cp.LotType != 'D' order by cp.RecordDate desc,cp.dm_asset_core_lot_id desc)) as CurrentMarketValue
+,(select top 1 isnull(cp.SharePrice,0) as CurrentPrice from dm_asset_core_lot cp where cp.Symbol = lot.Symbol and cp.LotType != 'D' order by cp.RecordDate desc,cp.dm_asset_core_lot_id desc) as CurrentPrice 
+,((lot.NumberOfShares * (select top 1 isnull(cp.SharePrice,0) as CurrentPrice from dm_asset_core_lot cp where cp.Symbol = lot.Symbol and cp.LotType != 'D' order by cp.RecordDate desc,cp.dm_asset_core_lot_id desc)) - (lot.NumberOfShares * lot.SharePrice)) as PL
+,(((lot.NumberOfShares * (select top 1 isnull(cp.SharePrice,0) as CurrentPrice from dm_asset_core_lot cp where cp.Symbol = lot.Symbol and cp.LotType != 'D' order by cp.RecordDate desc,cp.dm_asset_core_lot_id desc)) - (lot.NumberOfShares * lot.SharePrice)) / (lot.NumberOfShares * lot.SharePrice)) * 100 as PLPercent
+,ts.LTCGShares
+,si.[Value] as [Value]
+ from dm_asset_core_lot_share lot
+ left outer join dm_asset_core_symbol_index si on si.symbol = lot.symbol
+ join @TempSymbol ts on ts.Symbol = lot.Symbol
+ where lot.Symbol != ''
+ and lot.NumberOfShares >= 1
+
+) as tbl  order by PLPercent asc
+
+03:13:54 LOG: declare @TempSymbol as Table
+(
+ID INT IDENTITY(1, 1),
+Symbol varchar(200),
+LTCGShares decimal(19,8)
+); 
+insert into @TempSymbol(Symbol,LTCGShares)
+select tbl.Symbol,sum(tbl.LTCGShares) as LTCGShares from (
+select lot.Symbol, 
+lot.dm_asset_core_lot_id,lot.RecordDate,lot.NumberOfShares,lot.SharePrice
+,lot.LotType 
+,lot.BalanceShares
+,lot.AvgPrice
+,case when DATEADD(YEAR, 1, lot.RecordDate) < getdate() and lot.BalanceShares > 0 then 
+case when lot.LotType = 'B' then lot.NumberOfShares else lot.NumberOfShares * -1 end else 0 end as LTCGShares 
+from dm_asset_core_lot lot
+where lot.LotType in ('B','S') 
+and BalanceShares > 0 
+) as tbl 
+group by tbl.Symbol 
+
+select * from (select
+ lot.Symbol
+,lot.NumberOfShares
+,lot.SharePrice
+,lot.Amount
+,lot.XIRR
+,(lot.NumberOfShares * (select top 1 isnull(cp.SharePrice,0) as CurrentPrice from dm_asset_core_lot cp where cp.Symbol = lot.Symbol and cp.LotType != 'D' order by cp.RecordDate desc,cp.dm_asset_core_lot_id desc)) as CurrentMarketValue
+,(select top 1 isnull(cp.SharePrice,0) as CurrentPrice from dm_asset_core_lot cp where cp.Symbol = lot.Symbol and cp.LotType != 'D' order by cp.RecordDate desc,cp.dm_asset_core_lot_id desc) as CurrentPrice 
+,((lot.NumberOfShares * (select top 1 isnull(cp.SharePrice,0) as CurrentPrice from dm_asset_core_lot cp where cp.Symbol = lot.Symbol and cp.LotType != 'D' order by cp.RecordDate desc,cp.dm_asset_core_lot_id desc)) - (lot.NumberOfShares * lot.SharePrice)) as PL
+,(((lot.NumberOfShares * (select top 1 isnull(cp.SharePrice,0) as CurrentPrice from dm_asset_core_lot cp where cp.Symbol = lot.Symbol and cp.LotType != 'D' order by cp.RecordDate desc,cp.dm_asset_core_lot_id desc)) - (lot.NumberOfShares * lot.SharePrice)) / (lot.NumberOfShares * lot.SharePrice)) * 100 as PLPercent
+,ts.LTCGShares
+,si.[Value] as [Value]
+ from dm_asset_core_lot_share lot
+ left outer join dm_asset_core_symbol_index si on si.symbol = lot.symbol
+ join @TempSymbol ts on ts.Symbol = lot.Symbol
+ where lot.Symbol != ''
+ and lot.NumberOfShares >= 1
+
+) as tbl  order by PL asc
+
+03:13:57 LOG: declare @TempSymbol as Table
+(
+ID INT IDENTITY(1, 1),
+Symbol varchar(200),
+LTCGShares decimal(19,8)
+); 
+insert into @TempSymbol(Symbol,LTCGShares)
+select tbl.Symbol,sum(tbl.LTCGShares) as LTCGShares from (
+select lot.Symbol, 
+lot.dm_asset_core_lot_id,lot.RecordDate,lot.NumberOfShares,lot.SharePrice
+,lot.LotType 
+,lot.BalanceShares
+,lot.AvgPrice
+,case when DATEADD(YEAR, 1, lot.RecordDate) < getdate() and lot.BalanceShares > 0 then 
+case when lot.LotType = 'B' then lot.NumberOfShares else lot.NumberOfShares * -1 end else 0 end as LTCGShares 
+from dm_asset_core_lot lot
+where lot.LotType in ('B','S') 
+and BalanceShares > 0 
+) as tbl 
+group by tbl.Symbol 
+
+select * from (select
+ lot.Symbol
+,lot.NumberOfShares
+,lot.SharePrice
+,lot.Amount
+,lot.XIRR
+,(lot.NumberOfShares * (select top 1 isnull(cp.SharePrice,0) as CurrentPrice from dm_asset_core_lot cp where cp.Symbol = lot.Symbol and cp.LotType != 'D' order by cp.RecordDate desc,cp.dm_asset_core_lot_id desc)) as CurrentMarketValue
+,(select top 1 isnull(cp.SharePrice,0) as CurrentPrice from dm_asset_core_lot cp where cp.Symbol = lot.Symbol and cp.LotType != 'D' order by cp.RecordDate desc,cp.dm_asset_core_lot_id desc) as CurrentPrice 
+,((lot.NumberOfShares * (select top 1 isnull(cp.SharePrice,0) as CurrentPrice from dm_asset_core_lot cp where cp.Symbol = lot.Symbol and cp.LotType != 'D' order by cp.RecordDate desc,cp.dm_asset_core_lot_id desc)) - (lot.NumberOfShares * lot.SharePrice)) as PL
+,(((lot.NumberOfShares * (select top 1 isnull(cp.SharePrice,0) as CurrentPrice from dm_asset_core_lot cp where cp.Symbol = lot.Symbol and cp.LotType != 'D' order by cp.RecordDate desc,cp.dm_asset_core_lot_id desc)) - (lot.NumberOfShares * lot.SharePrice)) / (lot.NumberOfShares * lot.SharePrice)) * 100 as PLPercent
+,ts.LTCGShares
+,si.[Value] as [Value]
+ from dm_asset_core_lot_share lot
+ left outer join dm_asset_core_symbol_index si on si.symbol = lot.symbol
+ join @TempSymbol ts on ts.Symbol = lot.Symbol
+ where lot.Symbol != ''
+ and lot.NumberOfShares >= 1
+
+) as tbl  order by PLPercent asc
+
+03:13:57 LOG: declare @TempSymbol as Table
+(
+ID INT IDENTITY(1, 1),
+Symbol varchar(200),
+LTCGShares decimal(19,8)
+); 
+insert into @TempSymbol(Symbol,LTCGShares)
+select tbl.Symbol,sum(tbl.LTCGShares) as LTCGShares from (
+select lot.Symbol, 
+lot.dm_asset_core_lot_id,lot.RecordDate,lot.NumberOfShares,lot.SharePrice
+,lot.LotType 
+,lot.BalanceShares
+,lot.AvgPrice
+,case when DATEADD(YEAR, 1, lot.RecordDate) < getdate() and lot.BalanceShares > 0 then 
+case when lot.LotType = 'B' then lot.NumberOfShares else lot.NumberOfShares * -1 end else 0 end as LTCGShares 
+from dm_asset_core_lot lot
+where lot.LotType in ('B','S') 
+and BalanceShares > 0 
+) as tbl 
+group by tbl.Symbol 
+
+select * from (select
+ lot.Symbol
+,lot.NumberOfShares
+,lot.SharePrice
+,lot.Amount
+,lot.XIRR
+,(lot.NumberOfShares * (select top 1 isnull(cp.SharePrice,0) as CurrentPrice from dm_asset_core_lot cp where cp.Symbol = lot.Symbol and cp.LotType != 'D' order by cp.RecordDate desc,cp.dm_asset_core_lot_id desc)) as CurrentMarketValue
+,(select top 1 isnull(cp.SharePrice,0) as CurrentPrice from dm_asset_core_lot cp where cp.Symbol = lot.Symbol and cp.LotType != 'D' order by cp.RecordDate desc,cp.dm_asset_core_lot_id desc) as CurrentPrice 
+,((lot.NumberOfShares * (select top 1 isnull(cp.SharePrice,0) as CurrentPrice from dm_asset_core_lot cp where cp.Symbol = lot.Symbol and cp.LotType != 'D' order by cp.RecordDate desc,cp.dm_asset_core_lot_id desc)) - (lot.NumberOfShares * lot.SharePrice)) as PL
+,(((lot.NumberOfShares * (select top 1 isnull(cp.SharePrice,0) as CurrentPrice from dm_asset_core_lot cp where cp.Symbol = lot.Symbol and cp.LotType != 'D' order by cp.RecordDate desc,cp.dm_asset_core_lot_id desc)) - (lot.NumberOfShares * lot.SharePrice)) / (lot.NumberOfShares * lot.SharePrice)) * 100 as PLPercent
+,ts.LTCGShares
+,si.[Value] as [Value]
+ from dm_asset_core_lot_share lot
+ left outer join dm_asset_core_symbol_index si on si.symbol = lot.symbol
+ join @TempSymbol ts on ts.Symbol = lot.Symbol
+ where lot.Symbol != ''
+ and lot.NumberOfShares >= 1
+
+) as tbl  order by PL asc
+
+03:14:08 LOG: declare @TempSymbol as Table
+(
+ID INT IDENTITY(1, 1),
+Symbol varchar(200),
+LTCGShares decimal(19,8)
+); 
+insert into @TempSymbol(Symbol,LTCGShares)
+select tbl.Symbol,sum(tbl.LTCGShares) as LTCGShares from (
+select lot.Symbol, 
+lot.dm_asset_core_lot_id,lot.RecordDate,lot.NumberOfShares,lot.SharePrice
+,lot.LotType 
+,lot.BalanceShares
+,lot.AvgPrice
+,case when DATEADD(YEAR, 1, lot.RecordDate) < getdate() and lot.BalanceShares > 0 then 
+case when lot.LotType = 'B' then lot.NumberOfShares else lot.NumberOfShares * -1 end else 0 end as LTCGShares 
+from dm_asset_core_lot lot
+where lot.LotType in ('B','S') 
+and BalanceShares > 0 
+) as tbl 
+group by tbl.Symbol 
+
+select * from (select
+ lot.Symbol
+,lot.NumberOfShares
+,lot.SharePrice
+,lot.Amount
+,lot.XIRR
+,(lot.NumberOfShares * (select top 1 isnull(cp.SharePrice,0) as CurrentPrice from dm_asset_core_lot cp where cp.Symbol = lot.Symbol and cp.LotType != 'D' order by cp.RecordDate desc,cp.dm_asset_core_lot_id desc)) as CurrentMarketValue
+,(select top 1 isnull(cp.SharePrice,0) as CurrentPrice from dm_asset_core_lot cp where cp.Symbol = lot.Symbol and cp.LotType != 'D' order by cp.RecordDate desc,cp.dm_asset_core_lot_id desc) as CurrentPrice 
+,((lot.NumberOfShares * (select top 1 isnull(cp.SharePrice,0) as CurrentPrice from dm_asset_core_lot cp where cp.Symbol = lot.Symbol and cp.LotType != 'D' order by cp.RecordDate desc,cp.dm_asset_core_lot_id desc)) - (lot.NumberOfShares * lot.SharePrice)) as PL
+,(((lot.NumberOfShares * (select top 1 isnull(cp.SharePrice,0) as CurrentPrice from dm_asset_core_lot cp where cp.Symbol = lot.Symbol and cp.LotType != 'D' order by cp.RecordDate desc,cp.dm_asset_core_lot_id desc)) - (lot.NumberOfShares * lot.SharePrice)) / (lot.NumberOfShares * lot.SharePrice)) * 100 as PLPercent
+,ts.LTCGShares
+,si.[Value] as [Value]
+ from dm_asset_core_lot_share lot
+ left outer join dm_asset_core_symbol_index si on si.symbol = lot.symbol
+ join @TempSymbol ts on ts.Symbol = lot.Symbol
+ where lot.Symbol != ''
+ and lot.NumberOfShares >= 1
+
+) as tbl  order by PL desc
+

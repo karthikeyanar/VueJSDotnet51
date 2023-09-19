@@ -1,4 +1,4 @@
 E:
-cd E:\Projects\MyVue\ConsoleSource\PepperExcelImport\bin
-PepperExcelImport "quarter_index"
+cd E:\Projects\MyVue\ConsoleSource\PepperExe\bin
+PepperExe "quarter_index"
 pause

@@ -11,12 +11,12 @@ using Microsoft.Net.Http.Headers;
 namespace api.Controllers
 {
     [ApiController]
-    [Route("api/[controller]/[action]")]
+    [Route("[controller]/[action]")]
     public class HomeController : ControllerBase
     {
         private readonly IConfiguration configuration;
         private string connectionString = "";
-        public HomeController(IConfiguration config) 
+        public HomeController(IConfiguration config)
         {
             configuration = config;
             connectionString = configuration.GetConnectionString("DefaultConnection");
@@ -28,16 +28,16 @@ namespace api.Controllers
         }
 
         public dynamic List(int pageIndex
-                ,int pageSize
-                ,string sortName = ""
-                ,string sortOrder = ""
-                ,string symbol = ""
-                ,bool? isIgnore = false
-                ,DateTime? fromDate = null
-                ,DateTime? toDate = null
-                ,bool? isOptions = false
-                ,bool? isGold = false
-                ,string tradeType = "")
+                , int pageSize
+                , string sortName = ""
+                , string sortOrder = ""
+                , string symbol = ""
+                , bool? isIgnore = false
+                , DateTime? fromDate = null
+                , DateTime? toDate = null
+                , bool? isOptions = false
+                , bool? isGold = false
+                , string tradeType = "")
         {
             DateTime minDate = Convert.ToDateTime("01/01/1900");
             int totalRows = 0;
@@ -66,14 +66,15 @@ namespace api.Controllers
                 {
                     where += " and lot.Symbol in (" + symbol + ")" + Environment.NewLine;
                 }
-            } 
+            }
             if (string.IsNullOrEmpty(tradeType) == false)
             {
                 tradeType = Helper.ConvertStringSQLFormat(tradeType);
                 where += " and lot.LotType in (" + tradeType + ")" + Environment.NewLine;
             }
             string sql = "select isnull(count(*),0) as cnt from dm_asset_core_lot lot " + where + Environment.NewLine;
-            using (SqlConnection connection = new SqlConnection(connectionString)) {
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            {
                 totalRows = (int)connection.ExecuteScalar(sql);
             }
             sql = "select" + Environment.NewLine;
@@ -81,49 +82,51 @@ namespace api.Controllers
             sql += where + Environment.NewLine;
             sql += " order by " + sortName + " " + sortOrder + Environment.NewLine;
             sql += " OFFSET (" + (pageIndex - 1) + ") * " + pageSize + " ROWS " + Environment.NewLine;
-			sql += " FETCH NEXT " + pageSize + " ROWS ONLY" + Environment.NewLine;
+            sql += " FETCH NEXT " + pageSize + " ROWS ONLY" + Environment.NewLine;
             //Helper.Log("pageIndex=" + pageIndex + ",pageSize=" + pageSize);
             Helper.Log(sql);
             List<dm_asset_core_lot> list;
-            using (SqlConnection connection = new SqlConnection(connectionString)) {
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            {
                 list = connection.Query<dm_asset_core_lot>(sql).ToList();
             }
-            double xirr = this.XIRR(symbol, isIgnore, fromDate, toDate,isOptions,isGold);
-            List<dm_asset_core_lot_share> totalSharesList = this.ListShare(symbol,isIgnore,isOptions,isGold);
+            double xirr = this.XIRR(symbol, isIgnore, fromDate, toDate, isOptions, isGold);
+            List<dm_asset_core_lot_share> totalSharesList = this.ListShare(symbol, isIgnore, isOptions, isGold);
             List<string> dividendSymbols = new List<string> { };//"PGINVIT-IV", "INDIGRID-IV", "RECLTD" };
             List<string> debtSymbols = new List<string> { "LIQUIDBEES", "LIQUIDBEES-F" };
             totalSharesList = (from q in totalSharesList
                                where debtSymbols.Contains(q.Symbol) == false
                                select q).ToList();
-            
+
             //decimal? totalGold = (from q in totalSharesList where q.Symbol == "GOLD" select q.Amount).Sum();
             decimal? totalCapitalCall = (from q in totalSharesList select q.Amount).Sum();
             //decimal? totalDividendCall = (from q in totalSharesList where dividendSymbols.Contains(q.Symbol) == true select q.Amount).Sum();
-            decimal? totalInvestmentCall = (from q in totalSharesList 
+            decimal? totalInvestmentCall = (from q in totalSharesList
                                             where dividendSymbols.Contains(q.Symbol) == false
                                             && debtSymbols.Contains(q.Symbol) == false
                                             select q.Amount).Sum();
 
-            decimal? totalStrategyCall = (from q in totalSharesList 
-                                            where dividendSymbols.Contains(q.Symbol) == false
-                                            && debtSymbols.Contains(q.Symbol) == false
-                                            && (q.Value ?? 0) > 0
-                                            select q.Amount).Sum();
+            decimal? totalStrategyCall = (from q in totalSharesList
+                                          where dividendSymbols.Contains(q.Symbol) == false
+                                          && debtSymbols.Contains(q.Symbol) == false
+                                          && (q.Value ?? 0) > 0
+                                          select q.Amount).Sum();
 
             //decimal? totalOptionsCall = (from q in totalSharesList
-              //                           select q.Amount).Sum();
+            //                           select q.Amount).Sum();
             decimal? totalPL = (from q in totalSharesList select (q.PL ?? 0)).Sum();
 
-            decimal? totalUnRealizedPL = (from q in totalSharesList 
+            decimal? totalUnRealizedPL = (from q in totalSharesList
                                           select (q.UnRealizedPL ?? 0)).Sum();
-            decimal? currentMarketValue = (from q in totalSharesList 
+            decimal? currentMarketValue = (from q in totalSharesList
                                            select (q.CurrentMarketValue ?? 0)).Sum();
             decimal? totalDebtCall = (from q in totalSharesList where debtSymbols.Contains(q.Symbol) == true select q.Amount).Sum();
 
             sql = "exec [PROC_CALC_dm_asset_core_index]";
             CurrentIndexValue currentIndexValue;
             List<IndexList> indexList;
-            using (SqlConnection connection = new SqlConnection(connectionString)) {
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            {
                 using (var multi = connection.QueryMultiple(sql))
                 {
                     currentIndexValue = multi.Read<CurrentIndexValue>().FirstOrDefault();
@@ -134,27 +137,39 @@ namespace api.Controllers
             //totalInvestmentCall = currentIndexValue.Total;
             //currentMarketValue = currentIndexValue.Current;
             //totalPL = currentIndexValue.PL;
-            return new { xirr = xirr
-                ,total = totalRows
-                ,rows = list 
+            return new
+            {
+                xirr = xirr
+                ,
+                total = totalRows
+                ,
+                rows = list
                 //,TotalGold = totalGold
-                ,TotalCapitalCall = totalCapitalCall
+                ,
+                TotalCapitalCall = totalCapitalCall
                 //,TotalDividendCall = totalDividendCall
-                ,TotalInvestmentCall = totalInvestmentCall
-                ,TotalStrategyCall = totalStrategyCall
+                ,
+                TotalInvestmentCall = totalInvestmentCall
+                ,
+                TotalStrategyCall = totalStrategyCall
                 //,TotalOptionsCall = totalOptionsCall
                 //,TotalDebtCall = totalDebtCall
-                ,TotalPL = totalPL
-                ,TotalPLPercent = currentIndexValue.PLPercent
-                ,TotalUnRealizedPL = totalUnRealizedPL
-                ,CurrentMarketValue = currentMarketValue
-                ,indexList = indexList
+                ,
+                TotalPL = totalPL
+                ,
+                TotalPLPercent = currentIndexValue.PLPercent
+                ,
+                TotalUnRealizedPL = totalUnRealizedPL
+                ,
+                CurrentMarketValue = currentMarketValue
+                ,
+                indexList = indexList
             };
         }
 
 
         public List<dm_asset_core_lot_share> ListShare(string symbol = ""
-                , bool? isIgnore = false 
+                , bool? isIgnore = false
                 , bool? isOptions = false
                 , bool? isGold = false
                 , bool? isCurrent = false
@@ -218,7 +233,7 @@ namespace api.Controllers
                 {
                     where += " and lot.Symbol in (" + symbol + ")" + Environment.NewLine;
                 }
-            } 
+            }
             where += " and lot.NumberOfShares >= 1" + Environment.NewLine;
             sql += where + Environment.NewLine;
             if (string.IsNullOrEmpty(sortName) == true)
@@ -272,7 +287,7 @@ namespace api.Controllers
                         ",@LotType" + Environment.NewLine +
                         ",@RefID)" + Environment.NewLine +
                         "";
-            if(row.dm_asset_core_lot_id > 0)
+            if (row.dm_asset_core_lot_id > 0)
             {
                 sql = "UPDATE [dbo].[dm_asset_core_lot]" + Environment.NewLine +
                         " SET [Symbol] = @Symbol " + Environment.NewLine +
@@ -310,7 +325,7 @@ namespace api.Controllers
 
         public dynamic SearchSymbol(string term = "")
         {
-            int totalRows = 0; 
+            int totalRows = 0;
             string where = "";
             if (string.IsNullOrEmpty(term) == false)
             {
@@ -342,8 +357,8 @@ namespace api.Controllers
             {
                 result = (int)connection.Execute(sql, new
                 {
-                    id = id, 
-                }); 
+                    id = id,
+                });
             }
             return result;
         }
@@ -419,11 +434,11 @@ namespace api.Controllers
         //}
 
         private double XIRR(string symbol = ""
-                ,bool? isIgnore = false
-                ,DateTime? fromDate = null
-                ,DateTime? toDate = null
-                ,bool? isOptions = false
-                ,bool? isGold = false)
+                , bool? isIgnore = false
+                , DateTime? fromDate = null
+                , DateTime? toDate = null
+                , bool? isOptions = false
+                , bool? isGold = false)
         {
             DateTime minDate = Convert.ToDateTime("01/01/1900");
             double xirr = 0;
@@ -433,8 +448,9 @@ namespace api.Controllers
             }
             string where = "";
             where += " where lot.dm_asset_core_lot_id > 0";
-            if ((fromDate ?? minDate).Year > 1900) {
-                where += string.Format(" and lot.RecordDate >= '{0}' ",(fromDate ?? minDate).ToString("MM/dd/yyyy"));
+            if ((fromDate ?? minDate).Year > 1900)
+            {
+                where += string.Format(" and lot.RecordDate >= '{0}' ", (fromDate ?? minDate).ToString("MM/dd/yyyy"));
             }
             if ((toDate ?? minDate).Year > 1900)
             {
@@ -461,7 +477,7 @@ namespace api.Controllers
                         " else case when lot.LotType = 'S' then (lot.NumberOfShares * lot.SharePrice) else lot.SharePrice end end [Value]" + Environment.NewLine +
                         ",0 as SortOrder" + Environment.NewLine +
                         "from dm_asset_core_lot lot" + Environment.NewLine +
-                        where + 
+                        where +
                         "and lot.LotType in ('B','S','D','E') " + Environment.NewLine +
                         "union all " + Environment.NewLine +
                         "select '' as Symbol,'Current Market Value' as [Description],[Date],sum(isnull([Value], 0)) as [Value],1 as SortOrder from (" + Environment.NewLine +
@@ -511,7 +527,8 @@ namespace api.Controllers
                 IFormFile file = Request.Form.Files[0];
                 var folderName = "temp";
                 var pathToSave = System.IO.Path.Combine(Directory.GetCurrentDirectory(), folderName);
-                if(System.IO.Directory.Exists(pathToSave) == false){
+                if (System.IO.Directory.Exists(pathToSave) == false)
+                {
                     System.IO.Directory.CreateDirectory(pathToSave);
                 }
                 if (file.Length > 0)
@@ -536,6 +553,24 @@ namespace api.Controllers
                 error = ex.Message;
             }
             return new { error = error, total = total };
+        }
+
+        public dynamic TickerList(DateTime periodDate)
+        {
+            string sql = "select * from (" + Environment.NewLine +
+                            "select sym.Symbol" + Environment.NewLine +
+                            ",sym.TickerUrl " + Environment.NewLine +
+                            ",(select isnull(count(*), 0) as cnt from FinancialReporting fr" + Environment.NewLine +
+                            "where fr.Symbol = sym.Symbol and fr.PeriodDate = @PeriodDate) as cnt" + Environment.NewLine +
+                            "from dm_asset_core_symbol sym" + Environment.NewLine +
+                            "where isnull(sym.TickerUrl, '') != ''" + Environment.NewLine +
+                            ") as tbl where isnull(tbl.cnt,0) <= 0 " + Environment.NewLine +
+                            " order by tbl.Symbol" + Environment.NewLine +
+                            "";
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            {
+                return connection.Query<dynamic>(sql, new { PeriodDate = periodDate }).ToList();
+            }
         }
     }
 }

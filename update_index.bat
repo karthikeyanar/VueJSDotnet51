@@ -1,4 +1,4 @@
 E:
-cd E:\Projects\MyVue\ConsoleSource\PepperExcelImport\bin
-PepperExcelImport "update_index"
+cd E:\Projects\MyVue\ConsoleSource\PepperExe\bin
+PepperExe "update_index"
 pause
