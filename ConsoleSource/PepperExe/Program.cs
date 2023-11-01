@@ -44,9 +44,8 @@ namespace PepperExe
         static string _ConnectionString = "";
 
         static void Main(string[] args)
-        {
-            _ConnectionString = System.Configuration.ConfigurationManager.ConnectionStrings["PepperContext"].ToString();
-            UpdateFinancial_Old();
+        { 
+            _ConnectionString = System.Configuration.ConfigurationManager.ConnectionStrings["PepperContext"].ToString(); 
             bool isSkip = false;
             if (args != null)
             {
@@ -1067,6 +1066,7 @@ namespace PepperExe
                     string html = System.IO.File.ReadAllText(file);
                     UpdateIndustry(symbol, html);
                     UpdateScreenQuarterly(symbol, html);
+                    System.IO.File.Delete(file);
                 }
                 Console.WriteLine(index + " of " + files.Length);
             }
@@ -1168,32 +1168,42 @@ namespace PepperExe
             int index = 0;
             foreach (string symbol in symbols)
             {
-                fileName = System.IO.Path.Combine(folderPath, symbol + ".html");
-                if (System.IO.File.Exists(fileName) == false)
-                {
-                    string html = "";
-                    string url = "https://www.screener.in/company/{0}/consolidated/";
-                    url = string.Format(url, symbol);
-                    //Console.WriteLine(symbol); 
-                    WebClient webClient = new WebClient();
-                    try
-                    {
-                        html = webClient.DownloadString(url);
-                        if (html.Contains("Loading peers") == true)
-                        {
-                            // Console.WriteLine(symbol + " try standalone");
-                            webClient = new WebClient();
-                            url = "https://www.screener.in/company/{0}";
-                            url = string.Format(url, symbol);
-                            html = webClient.DownloadString(url);
-                        }
-                        System.IO.File.WriteAllText(fileName, html);
-                        //System.Threading.Thread.Sleep(10000);
-                    }
-                    catch { }
-                }
+                DownloadScreenerSymbol(symbol);
+                System.Threading.Thread.Sleep(5000); 
                 index += 1;
                 Console.WriteLine(index + " of " + symbols.Count);
+            }
+        }
+
+        private static void DownloadScreenerSymbol(string symbol)
+        {
+            string rootPath = System.Configuration.ConfigurationManager.AppSettings["RootPath"];
+            string folderPath = System.IO.Path.Combine(rootPath, "screener");
+            string fileName = System.IO.Path.Combine(folderPath, symbol + ".html");
+            if (System.IO.File.Exists(fileName) == false)
+            {
+                string html = "";
+                string url = "https://www.screener.in/company/{0}/consolidated/";
+                url = string.Format(url, symbol);
+                //Console.WriteLine(symbol); 
+                WebClient webClient = new WebClient();
+                try
+                {
+                    html = webClient.DownloadString(url);
+                    if (html.Contains("View Standalone") == false)
+                    {
+                        // Console.WriteLine(symbol + " try standalone");
+                        webClient = new WebClient();
+                        url = "https://www.screener.in/company/{0}";
+                        url = string.Format(url, symbol);
+                        html = webClient.DownloadString(url);
+                    }
+                    System.IO.File.WriteAllText(fileName, html); 
+                }
+                catch(Exception ex) {
+                    string s = ex.Message;
+                    Console.WriteLine(symbol + " Ex=" + ex.Message);
+                }
             }
         }
 

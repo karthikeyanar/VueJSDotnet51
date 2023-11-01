@@ -1,5 +1,5 @@
 --declare @key varchar(max);
-declare @quarterenddate datetime = '2023-06-30 00:00:00.000';
+declare @quarterenddate datetime = '2023-09-30';
 declare @lastyearquarter datetime; 
 select @lastyearquarter = DATEADD(YEAR, -1, @quarterenddate);
 DECLARE @prevquarterenddate datetime;
@@ -13,14 +13,18 @@ select * from (
 select 
 fr.Symbol,sym.Sector,sym.Industry
 --,sym.MarketCapital
---,(select lq.[Value] from FinancialReporting lq 
---join FinancialReportingSchemaKey lqkey on lqkey.FinancialReportingSchemaKeyID = lq.FinancialReportingSourceKeyID and lqkey.[Key] = 'Net Profit'
---where lq.Symbol = fr.Symbol and lq.PeriodDate = @lastyearquarter
---) as LastYearNetIncome
---,(select lq.[Value] from FinancialReporting lq 
---join FinancialReportingSchemaKey lqkey on lqkey.FinancialReportingSchemaKeyID = lq.FinancialReportingSourceKeyID and lqkey.[Key] = 'Net Profit'
---where lq.Symbol = fr.Symbol and lq.PeriodDate = @quarterenddate
---) as CurrentNetIncome
+,(select lq.[Value] from FinancialReporting lq 
+join FinancialReportingSchemaKey lqkey on lqkey.FinancialReportingSchemaKeyID = lq.FinancialReportingSourceKeyID and lqkey.[Key] = 'Net Profit'
+where lq.Symbol = fr.Symbol and lq.PeriodDate = @lastyearquarter
+) as LastYearNetIncome
+,(select lq.[Value] from FinancialReporting lq 
+join FinancialReportingSchemaKey lqkey on lqkey.FinancialReportingSchemaKeyID = lq.FinancialReportingSourceKeyID and lqkey.[Key] = 'Net Profit'
+where lq.Symbol = fr.Symbol and lq.PeriodDate = @quarterenddate
+) as CurrentNetIncome
+,(select lq.[Value] from FinancialReporting lq 
+join FinancialReportingSchemaKey lqkey on lqkey.FinancialReportingSchemaKeyID = lq.FinancialReportingSourceKeyID and lqkey.[Key] = 'Net Profit'
+where lq.Symbol = fr.Symbol and lq.PeriodDate = @prevquarterenddate
+) as PrevQuarterNetProfit
 ,
 (select 
 case when (select lq.[Value] from FinancialReporting lq 
@@ -93,22 +97,22 @@ join FinancialReportingSchemaKey fvkey on fvkey.FinancialReportingSchemaKeyID = 
 where fv.Symbol = fr.Symbol and fv.PeriodDate = @quarterenddate
 ) as [Sales]
 
-,(select 
-case when (select lq.[Value] from FinancialReporting lq 
-join FinancialReportingSchemaKey lqkey on lqkey.FinancialReportingSchemaKeyID = lq.FinancialReportingSourceKeyID and lqkey.[Key] = 'Total Revenue'
-where lq.Symbol = fv.Symbol and lq.PeriodDate = @lastyearquarter
-) != 0 then 
- (fv.[Value] - (select lq.[Value] from FinancialReporting lq 
-join FinancialReportingSchemaKey lqkey on lqkey.FinancialReportingSchemaKeyID = lq.FinancialReportingSourceKeyID and lqkey.[Key] = 'Total Revenue'
-where lq.Symbol = fv.Symbol and lq.PeriodDate = @lastyearquarter
-)) / (select lq.[Value] from FinancialReporting lq 
-join FinancialReportingSchemaKey lqkey on lqkey.FinancialReportingSchemaKeyID = lq.FinancialReportingSourceKeyID and lqkey.[Key] = 'Total Revenue'
-where lq.Symbol = fv.Symbol and lq.PeriodDate = @lastyearquarter
-) * 100  else 0 end
-from FinancialReporting fv 
-join FinancialReportingSchemaKey fvkey on fvkey.FinancialReportingSchemaKeyID = fv.FinancialReportingSourceKeyID and fvkey.[Key] = 'Total Revenue'
-where fv.Symbol = fr.Symbol and fv.PeriodDate = @quarterenddate
-) as [Revenue]
+--,(select 
+--case when (select lq.[Value] from FinancialReporting lq 
+--join FinancialReportingSchemaKey lqkey on lqkey.FinancialReportingSchemaKeyID = lq.FinancialReportingSourceKeyID and lqkey.[Key] = 'Total Revenue'
+--where lq.Symbol = fv.Symbol and lq.PeriodDate = @lastyearquarter
+--) != 0 then 
+-- (fv.[Value] - (select lq.[Value] from FinancialReporting lq 
+--join FinancialReportingSchemaKey lqkey on lqkey.FinancialReportingSchemaKeyID = lq.FinancialReportingSourceKeyID and lqkey.[Key] = 'Total Revenue'
+--where lq.Symbol = fv.Symbol and lq.PeriodDate = @lastyearquarter
+--)) / (select lq.[Value] from FinancialReporting lq 
+--join FinancialReportingSchemaKey lqkey on lqkey.FinancialReportingSchemaKeyID = lq.FinancialReportingSourceKeyID and lqkey.[Key] = 'Total Revenue'
+--where lq.Symbol = fv.Symbol and lq.PeriodDate = @lastyearquarter
+--) * 100  else 0 end
+--from FinancialReporting fv 
+--join FinancialReportingSchemaKey fvkey on fvkey.FinancialReportingSchemaKeyID = fv.FinancialReportingSourceKeyID and fvkey.[Key] = 'Total Revenue'
+--where fv.Symbol = fr.Symbol and fv.PeriodDate = @quarterenddate
+--) as [Revenue]
  
 from FinancialReporting fr
 join dm_asset_core_symbol sym on sym.Symbol = fr.Symbol 
@@ -185,14 +189,13 @@ and fr.Symbol not in ('ACC')
 and fr.Symbol not in ('BHARTIARTL')
 and fr.Symbol not in ('IOC')
 and fr.Symbol not in ('LICHSGFIN')
+and fr.Symbol not in ('IRFC')
 group by fr.Symbol,sym.Industry,sym.Sector,sym.MarketCapital
 ) as tbl 
 where tbl.QoQIncomeChange > 0
---and tbl.CurrentNetIncome > 0
---and tbl.LastYearNetIncome > 0
 and tbl.PrevQuarterNetIncome > 0
---and tbl.MarketCapital >= 20000
 and tbl.Sales > 0
---and tbl.Revenue > 0
-order by tbl.QoQIncomeChange desc,tbl.Revenue desc
---order by tbl.MarketCapital desc
+and tbl.LastYearNetIncome > 0
+and tbl.CurrentNetIncome > 0
+and tbl.PrevQuarterNetIncome > 0
+order by tbl.QoQIncomeChange desc,tbl.Sales desc
