@@ -11,8 +11,9 @@ select @quarterenddate as '@quarterenddate',@lastyearquarter as '@lastyearquarte
 
 select * from (
 select 
-fr.Symbol,sym.Sector,sym.Industry
---,sym.MarketCapital
+fr.Symbol
+,(select isnull(cs.NumberOfShares,0) from dm_asset_core_lot_share cs where cs.Symbol = fr.Symbol) as CurrentShares
+,sym.Sector,sym.Industry
 ,(select lq.[Value] from FinancialReporting lq 
 join FinancialReportingSchemaKey lqkey on lqkey.FinancialReportingSchemaKeyID = lq.FinancialReportingSourceKeyID and lqkey.[Key] = 'Net Profit'
 where lq.Symbol = fr.Symbol and lq.PeriodDate = @lastyearquarter

@@ -1131,6 +1131,7 @@ namespace PepperExe
             string folderPath = System.IO.Path.Combine(rootPath, "screener");
             string sql = "declare @quarterstartdate datetime;" + Environment.NewLine +
                         "SELECT @quarterstartdate = DATEADD(DD, -1, DATEADD(QQ, DATEDIFF(QQ, 0, GETDATE()) + 1, 0))  " + Environment.NewLine +
+                        //"SELECT @quarterstartdate = DATEADD(DD, -1, DATEADD(QQ, DATEDIFF(QQ, 0, '2023-06-30') + 1, 0))  " + Environment.NewLine +
                         "declare @prevquarterenddate datetime; " + Environment.NewLine +
                         "SELECT @prevquarterenddate = DATEADD(MONTH, 3, DATEADD(DAY, -1, DATEADD(QUARTER, -1, DATEADD(QUARTER, DATEDIFF(QUARTER, 0, @quarterstartdate), 0))))" + Environment.NewLine +
                         "select * from (" + Environment.NewLine +
@@ -1169,7 +1170,6 @@ namespace PepperExe
             foreach (string symbol in symbols)
             {
                 DownloadScreenerSymbol(symbol);
-                System.Threading.Thread.Sleep(5000); 
                 index += 1;
                 Console.WriteLine(index + " of " + symbols.Count);
             }
@@ -1180,25 +1180,37 @@ namespace PepperExe
             string rootPath = System.Configuration.ConfigurationManager.AppSettings["RootPath"];
             string folderPath = System.IO.Path.Combine(rootPath, "screener");
             string fileName = System.IO.Path.Combine(folderPath, symbol + ".html");
+            string ignoreConsolidatedSymbol = System.Configuration.ConfigurationManager.AppSettings["IgnoreConsolidatedSymbols"];
+            List<string> ignoreConsolidatedSymbolList = Helper.ConvertStringList(ignoreConsolidatedSymbol);
             if (System.IO.File.Exists(fileName) == false)
             {
                 string html = "";
-                string url = "https://www.screener.in/company/{0}/consolidated/";
+                bool isIgnoreConsolidated = false;
+                string url = "https://www.screener.in/company/{0}/consolidated";
+                if (ignoreConsolidatedSymbolList.Contains(symbol) == true) 
+                {
+                    url = "https://www.screener.in/company/{0}";
+                    isIgnoreConsolidated = true;
+                }
                 url = string.Format(url, symbol);
                 //Console.WriteLine(symbol); 
                 WebClient webClient = new WebClient();
                 try
                 {
                     html = webClient.DownloadString(url);
-                    if (html.Contains("View Standalone") == false)
+                    if (isIgnoreConsolidated == false)
                     {
-                        // Console.WriteLine(symbol + " try standalone");
-                        webClient = new WebClient();
-                        url = "https://www.screener.in/company/{0}";
-                        url = string.Format(url, symbol);
-                        html = webClient.DownloadString(url);
+                        if (html.Contains("View Standalone") == false)
+                        {
+                            // Console.WriteLine(symbol + " try standalone");
+                            webClient = new WebClient();
+                            url = "https://www.screener.in/company/{0}";
+                            url = string.Format(url, symbol);
+                            html = webClient.DownloadString(url);
+                        }
                     }
                     System.IO.File.WriteAllText(fileName, html); 
+                    System.Threading.Thread.Sleep(2000); 
                 }
                 catch(Exception ex) {
                     string s = ex.Message;
