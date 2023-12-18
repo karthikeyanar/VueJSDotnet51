@@ -46,7 +46,7 @@ namespace PepperExe
         static void Main(string[] args)
         { 
             _ConnectionString = System.Configuration.ConfigurationManager.ConnectionStrings["PepperContext"].ToString(); 
-            bool isSkip = false;
+            bool isSkip = false; 
             if (args != null)
             {
                 if (args.Length > 0)
@@ -228,8 +228,15 @@ namespace PepperExe
 
             int index = 1;
             string formula = "";
-            foreach (string symbol in symbols)
+            foreach (string sym in symbols)
             {
+                string symbol = sym;
+                switch (symbol)
+                {
+                    case "NEWGEN-BE":
+                        symbol = "NEWGEN";
+                        break;
+                }
                 index += 1;
                 row = new RowData
                 {
@@ -1129,6 +1136,11 @@ namespace PepperExe
         {
             string rootPath = System.Configuration.ConfigurationManager.AppSettings["RootPath"];
             string folderPath = System.IO.Path.Combine(rootPath, "screener");
+            List<string> ignoreSymbolList = new List<string>
+            {
+                "BRITANNIA-N3","DUMMYREL","NASDAQ","TATAMTRDVR","IBULHSGFIN-NE","GOLD"
+            };
+            string ignoreSymbols = Helper.ConvertStringSQLFormat(Helper.ConvertStringIds(ignoreSymbolList));
             string sql = "declare @quarterstartdate datetime;" + Environment.NewLine +
                         "SELECT @quarterstartdate = DATEADD(DD, -1, DATEADD(QQ, DATEDIFF(QQ, 0, GETDATE()) + 1, 0))  " + Environment.NewLine +
                         //"SELECT @quarterstartdate = DATEADD(DD, -1, DATEADD(QQ, DATEDIFF(QQ, 0, '2023-06-30') + 1, 0))  " + Environment.NewLine +
@@ -1137,10 +1149,11 @@ namespace PepperExe
                         "select * from (" + Environment.NewLine +
                         "select sym.Symbol,(select count(*) as cnt from FinancialReporting fr where fr.Symbol = sym.Symbol and fr.PeriodDate = @prevquarterenddate and fr.FinancialReportingSourceKeyID = 37) as cnt " + Environment.NewLine +
                         "from dm_asset_core_symbol sym" + Environment.NewLine +
+                        " where sym.Symbol not in(" + ignoreSymbols + ")" + Environment.NewLine +
                         "group by sym.Symbol " + Environment.NewLine +
                         ") as tbl where isnull(tbl.cnt,0) <= 0" + Environment.NewLine +
                         "order by tbl.Symbol " + Environment.NewLine +
-                        "";
+                        ""; 
             List<string> symbols;
             using (SqlConnection connection = new SqlConnection(_ConnectionString))
             {

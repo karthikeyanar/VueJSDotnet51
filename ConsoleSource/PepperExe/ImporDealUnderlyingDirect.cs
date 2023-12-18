@@ -146,6 +146,10 @@ namespace PepperExe
             {
                 symbol = "PGINVIT";
             }
+            if (symbol.Contains("NEWGEN-BE") == true)
+            {
+                symbol = "NEWGEN";
+            }
             return symbol;
         }
 
