@@ -46,6 +46,8 @@ namespace PepperExe
         static void Main(string[] args)
         { 
             _ConnectionString = System.Configuration.ConfigurationManager.ConnectionStrings["PepperContext"].ToString(); 
+            UpdateIndex();
+            return;
             bool isSkip = false; 
             if (args != null)
             {
@@ -503,7 +505,8 @@ namespace PepperExe
         public static void UpdateIndex()
         {
             string formula = "";
-            string qtyColumnName = "";
+            string symbolColumnName = "B";
+            string qtyColumnName = "C";
             string columnName = "";
             string rootPath = System.Configuration.ConfigurationManager.AppSettings["RootPath"];
             string credentialPath = System.IO.Path.Combine(rootPath, "credentials.json");
@@ -585,7 +588,7 @@ namespace PepperExe
 
                 row.Values.Add(new CellData
                 {
-                    UserEnteredValue = new ExtendedValue { StringValue = "Category" }
+                    UserEnteredValue = new ExtendedValue { StringValue = "Row#" } 
                 });
                 row.Values.Add(new CellData
                 {
@@ -602,14 +605,14 @@ namespace PepperExe
                 row.Values.Add(new CellData
                 {
                     UserEnteredValue = new ExtendedValue { StringValue = "Total" }
+                }); 
+                row.Values.Add(new CellData
+                {
+                    UserEnteredValue = new ExtendedValue { StringValue = "Today Price" }
                 });
                 row.Values.Add(new CellData
                 {
-                    UserEnteredValue = new ExtendedValue { StringValue = "Yesterday" }
-                });
-                row.Values.Add(new CellData
-                {
-                    UserEnteredValue = new ExtendedValue { StringValue = "Today" }
+                    UserEnteredValue = new ExtendedValue { StringValue = "Today Total" }
                 });
                 row.Values.Add(new CellData
                 {
@@ -622,6 +625,24 @@ namespace PepperExe
                 row.Values.Add(new CellData
                 {
                     UserEnteredValue = new ExtendedValue { StringValue = "PE" }
+                });
+                row.Values.Add(new CellData
+                {
+                    UserEnteredValue = new ExtendedValue { StringValue = "Difference %" }
+                });
+                formula = "=((SUM(G2:G100) - SUM(E2:E100)) / SUM(E2:E100)) * 100";
+                row.Values.Add(new CellData
+                {
+                    UserEnteredValue = new ExtendedValue { FormulaValue = formula }
+                });
+                row.Values.Add(new CellData
+                {
+                    UserEnteredValue = new ExtendedValue { StringValue = "Nifty" }
+                });
+                formula = "=GOOGLEFINANCE(\"INDEXNSE:NIFTY_50\",\"changepct\")";
+                row.Values.Add(new CellData
+                {
+                    UserEnteredValue = new ExtendedValue { FormulaValue = formula }
                 });
                 rows.Add(row);
                 int maxRow = 0;
@@ -668,10 +689,20 @@ namespace PepperExe
                     catch { }
                     if (lirow != null)
                     {
-                        row.Values.Add(new CellData
+                        if (i == 0)
                         {
-                            UserEnteredValue = new ExtendedValue { StringValue = lirow.Name }
-                        });
+                            row.Values.Add(new CellData
+                            {
+                                UserEnteredValue = new ExtendedValue { NumberValue = (i + 1) }
+                            });
+                        }
+                        else
+                        {
+                            row.Values.Add(new CellData
+                            {
+                                UserEnteredValue = new ExtendedValue { FormulaValue = "=A" + (i + 1) + "+1" }
+                            });
+                        }
                         row.Values.Add(new CellData
                         {
                             UserEnteredValue = new ExtendedValue { StringValue = lirow.Symbol }
@@ -688,44 +719,42 @@ namespace PepperExe
                         {
                             UserEnteredValue = new ExtendedValue { NumberValue = (double)((lirow.NumberOfShares ?? 0) * (lirow.SharePrice ?? 0)) }
                         });
-                        formula = string.Format("(GoogleFinance(\"{0}:{1}\", \"price\"))", exchangeName, lirow.Symbol, qtyColumnName, (i + 2));
-                        qtyColumnName = GetExcelColumnName(row.Values.Count - 2);
-                        columnName = GetExcelColumnName(row.Values.Count + 2);
-                        formula = string.Format("={4}{5} * (" + formula + " / (1 + (GOOGLEFINANCE(\"{2}:{3}\",\"changepct\") / 100)))", columnName, (i + 2), exchangeName, lirow.Symbol, qtyColumnName, (i + 2));
-                        //formula = string.Format("=GOOGLEFINANCE(\"{0}{1}\",\"price\",{2},{3},\"DAILY\")", "=A1", startDate, endDate);
+                        string gsheetSymbol = $"\"{exchangeName}:\" & {symbolColumnName}{(i + 2)}";
+                        string priceValue = $@"(GoogleFinance({gsheetSymbol},""price""))";
+                        formula = "=" + priceValue;
+                        row.Values.Add(new CellData
+                        {
+                            UserEnteredValue = new ExtendedValue { FormulaValue = formula }
+                        });
+                        
+                        formula = $@"={qtyColumnName}{i+2} * F{i+2}";
                         row.Values.Add(new CellData
                         {
                             UserEnteredValue = new ExtendedValue { FormulaValue = formula }
                         });
 
-                        formula = string.Format("={2}{3} * (GoogleFinance(\"{0}:{1}\", \"price\"))", exchangeName, lirow.Symbol, qtyColumnName, (i + 2));
+                        formula = $@"=(GoogleFinance({gsheetSymbol},""changepct""))";
                         row.Values.Add(new CellData
                         {
                             UserEnteredValue = new ExtendedValue { FormulaValue = formula }
                         });
 
-                        string col1 = GetExcelColumnName(row.Values.Count - 1);
-                        string col2 = GetExcelColumnName(row.Values.Count);
+                        string col1 = "E";//GetExcelColumnName(row.Values.Count - 1);
+                        string col2 = "G";//GetExcelColumnName(row.Values.Count);
                         formula = string.Format("=(({0} - {1}) / {1}) * 100", col2 + (i + 2), col1 + (i + 2));
                         row.Values.Add(new CellData
                         {
                             UserEnteredValue = new ExtendedValue { FormulaValue = formula }
                         });
 
-                        col1 = GetExcelColumnName(row.Values.Count - 1);
-                        col2 = GetExcelColumnName(row.Values.Count - 3);
-                        formula = string.Format("=(({0} - {1}) / {1}) * 100", col1 + (i + 2), col2 + (i + 2));
-                        row.Values.Add(new CellData
-                        {
-                            UserEnteredValue = new ExtendedValue { FormulaValue = formula }
-                        });
-                        formula = string.Format("=GOOGLEFINANCE(\"{0}:{1}\",\"pe\")", exchangeName, lirow.Symbol);
+                        formula = $@"=(GoogleFinance({gsheetSymbol},""pe""))";
                         row.Values.Add(new CellData
                         {
                             UserEnteredValue = new ExtendedValue { FormulaValue = formula }
                         });
                     }
 
+                    /*
                     if (i > maxRow)
                     {
                         if (row.Values.Count <= 0 && isTotalAppend == false)
@@ -742,7 +771,7 @@ namespace PepperExe
                                     UserEnteredValue = new ExtendedValue { StringValue = desc }
                                 });
                             }
-                            columnName = GetExcelColumnName(row.Values.Count + 1);
+                            columnName = "E";//GetExcelColumnName(row.Values.Count + 1);
                             formula = string.Format("=SUM({0}2:{0}{1})", columnName, (i + 1));
                             row.Values.Add(new CellData
                             {
@@ -752,7 +781,7 @@ namespace PepperExe
                             formula = string.Format("=SUM({0}2:{0}{1})", columnName, (i + 1));
                             row.Values.Add(new CellData
                             {
-                                UserEnteredValue = new ExtendedValue { FormulaValue = formula }
+                                UserEnteredValue = new ExtendedValue { StringValue = "" }
                             });
                             columnName = GetExcelColumnName(row.Values.Count + 1);
                             formula = string.Format("=SUM({0}2:{0}{1})", columnName, (i + 1));
@@ -764,7 +793,6 @@ namespace PepperExe
                             {
                                 UserEnteredValue = new ExtendedValue { StringValue = "" }
                             });
-
                             isTotalAppend = true;
                         }
                     }
@@ -803,7 +831,7 @@ namespace PepperExe
                             formula = string.Format("=(({0}{1} - {2}{1}) / {2}{1}) * 100", columnName, (i + 1), prevColumnName);
                             row.Values.Add(new CellData
                             {
-                                UserEnteredValue = new ExtendedValue { FormulaValue = formula }
+                                UserEnteredValue = new ExtendedValue { StringValue = "" }
                             });
                             row.Values.Add(new CellData
                             {
@@ -876,6 +904,7 @@ namespace PepperExe
                             isNiftyAppend = true;
                         }
                     }
+                    */
 
                     rows.Add(row);
                 }
