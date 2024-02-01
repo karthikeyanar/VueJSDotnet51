@@ -1,5 +1,5 @@
 --declare @key varchar(max);
-declare @quarterenddate datetime = '2023-09-30';
+declare @quarterenddate datetime = '2023-12-31';
 declare @lastyearquarter datetime; 
 select @lastyearquarter = DATEADD(YEAR, -1, @quarterenddate);
 DECLARE @prevquarterenddate datetime;
