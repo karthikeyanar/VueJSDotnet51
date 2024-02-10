@@ -22,10 +22,7 @@ where lq.Symbol = fr.Symbol and lq.PeriodDate = @lastyearquarter
 join FinancialReportingSchemaKey lqkey on lqkey.FinancialReportingSchemaKeyID = lq.FinancialReportingSourceKeyID and lqkey.[Key] = 'Net Profit'
 where lq.Symbol = fr.Symbol and lq.PeriodDate = @quarterenddate
 ) as CurrentNetIncome
-,(select lq.[Value] from FinancialReporting lq 
-join FinancialReportingSchemaKey lqkey on lqkey.FinancialReportingSchemaKeyID = lq.FinancialReportingSourceKeyID and lqkey.[Key] = 'Net Profit'
-where lq.Symbol = fr.Symbol and lq.PeriodDate = @prevquarterenddate
-) as PrevQuarterNetProfit
+
 ,
 (select 
 case when (select lq.[Value] from FinancialReporting lq 
@@ -42,22 +39,12 @@ where lq.Symbol = fv.Symbol and lq.PeriodDate = @lastyearquarter
 from FinancialReporting fv 
 join FinancialReportingSchemaKey fvkey on fvkey.FinancialReportingSchemaKeyID = fv.FinancialReportingSourceKeyID and fvkey.[Key] = 'Net Profit'
 where fv.Symbol = fr.Symbol and fv.PeriodDate = @quarterenddate
-) as [QoQIncomeChange]
+) as [QoQIncomeChange] 
 
---,(select lq.[Value] from FinancialReporting lq 
---join FinancialReportingSchemaKey lqkey on lqkey.FinancialReportingSchemaKeyID = lq.FinancialReportingSourceKeyID and lqkey.[Key] = 'Sales'
---where lq.Symbol = fr.Symbol and lq.PeriodDate = @lastyearquarter
---) as LastYearSales
---,(select lq.[Value] from FinancialReporting lq 
---join FinancialReportingSchemaKey lqkey on lqkey.FinancialReportingSchemaKeyID = lq.FinancialReportingSourceKeyID and lqkey.[Key] = 'Sales'
---where lq.Symbol = fr.Symbol and lq.PeriodDate = @quarterenddate
---) as CurrentSales
- 
-
---,(select lq.[Value] from FinancialReporting lq 
---join FinancialReportingSchemaKey lqkey on lqkey.FinancialReportingSchemaKeyID = lq.FinancialReportingSourceKeyID and lqkey.[Key] = 'Net Profit'
---where lq.Symbol = fr.Symbol and lq.PeriodDate = @prevquarterenddate
---) as PrevQuarterNet Profit
+,(select lq.[Value] from FinancialReporting lq 
+join FinancialReportingSchemaKey lqkey on lqkey.FinancialReportingSchemaKeyID = lq.FinancialReportingSourceKeyID and lqkey.[Key] = 'Net Profit'
+where lq.Symbol = fr.Symbol and lq.PeriodDate = @prevquarterenddate
+) as PrevQuarterNetProfit
 
 ,(select 
 case when (select lq.[Value] from FinancialReporting lq 
@@ -118,33 +105,8 @@ where fv.Symbol = fr.Symbol and fv.PeriodDate = @quarterenddate
 from FinancialReporting fr
 join dm_asset_core_symbol sym on sym.Symbol = fr.Symbol 
 where fr.PeriodDate = @quarterenddate 
-and (fr.Symbol like @symbol or @symbol is null)
---and (
---(
---(sym.Industry like '%Finance%')
---or (sym.Industry like '%Bank%')
---or (sym.Industry like '%Computer%')
---or (sym.Industry like '%Software%')
---or (sym.Industry like '%Chemical%')
---or (sym.Industry like '%Pharma%')
---or (sym.Industry like '%Healthcare%')
---or (sym.Industry like '%Cigarettes%')
---or (sym.Industry like '%Hotel%')
---or (sym.Industry like '%Paint%')
---or (sym.Industry like '%Cigarettes%')
---or (sym.Industry like '%Auto%')
---or (sym.Sector like '%Software%')
---or (sym.Sector like '%FMCG%')
---or (sym.Sector like '%Textiles%')
---or (sym.Sector like '%Retail%')
---or (sym.Sector like '%Tobacco%')
---or (sym.Sector like '%Hotel%')
---or (sym.Sector like '%Paint%')
---or (sym.Sector like '%Consumer%')
---or (sym.Sector like '%Auto%')
---or (sym.Sector like '%Alcoholic%')
---or (sym.Sector like '%Jewellery%')
---) or sym.Industry is null)
+--and sym.IsCurrent = 1
+and (fr.Symbol like @symbol or @symbol is null) 
 and sym.Industry not in ('Banks - Public Sector')
 and sym.Industry not in ('Construction')
 and sym.Sector not in ('Stock/ Commodity Brokers')
@@ -195,6 +157,8 @@ and fr.Symbol not in ('IRFC')
 and fr.Symbol not in ('BPCL')
 and fr.Symbol not in ('BDL')
 and fr.Symbol not in ('MAPMYINDIA')
+and fr.Symbol not in ('INDIGO')
+and fr.Symbol not in ('IIFL')
 group by fr.Symbol,sym.Industry,sym.Sector,sym.MarketCapital
 ) as tbl 
 --where tbl.CurrentShares > 0
@@ -204,4 +168,5 @@ and tbl.Sales > 0
 and tbl.LastYearNetIncome > 0
 and tbl.CurrentNetIncome > 0
 and tbl.PrevQuarterNetIncome > 0
+and tbl.PrevQuarterNetProfit > 0
 order by tbl.QoQIncomeChange desc,tbl.Sales desc

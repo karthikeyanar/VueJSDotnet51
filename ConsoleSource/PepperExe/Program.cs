@@ -44,7 +44,7 @@ namespace PepperExe
         static string _ConnectionString = "";
 
         static void Main(string[] args)
-        { 
+        {
             _ConnectionString = System.Configuration.ConfigurationManager.ConnectionStrings["PepperContext"].ToString(); 
             bool isSkip = false; 
             if (args != null)
@@ -1168,20 +1168,33 @@ namespace PepperExe
             }
         }
 
+        private static DateTime GetPreviousQuarterEndDate(DateTime date)
+        {
+            // Find the start date of the current quarter
+            DateTime currentQuarterStartDate = new DateTime(date.Year, (date.Month - 1) / 3 * 3 + 1, 1);
+
+            // Find the end date of the current quarter
+            DateTime currentQuarterEndDate = currentQuarterStartDate.AddMonths(3).AddDays(-1);
+
+            // Find the start date of the previous quarter
+            DateTime prevQuarterStartDate = currentQuarterStartDate.AddMonths(-3);
+
+            // Find the end date of the previous quarter
+            DateTime prevQuarterEndDate = currentQuarterStartDate.AddDays(-1);
+            return prevQuarterEndDate;
+        }
+
         public static void UpdateScreener()
         {
             string rootPath = System.Configuration.ConfigurationManager.AppSettings["RootPath"];
             string folderPath = System.IO.Path.Combine(rootPath, "screener");
             List<string> ignoreSymbolList = new List<string>
             {
-                "BRITANNIA-N3","DUMMYREL","NASDAQ","TATAMTRDVR","IBULHSGFIN-NE","GOLD"
+                "BRITANNIA-N3","DUMMYREL","NASDAQ","TATAMTRDVR","IBULHSGFIN-NE","GOLD","NAVIBANK","ICICIIT","INDIGRID-IV","PGINVIT-IV"
             };
+            DateTime prevQuarterEndDate = GetPreviousQuarterEndDate(DateTime.Now.Date);
             string ignoreSymbols = Helper.ConvertStringSQLFormat(Helper.ConvertStringIds(ignoreSymbolList));
-            string sql = "declare @quarterstartdate datetime;" + Environment.NewLine +
-                        "SELECT @quarterstartdate = DATEADD(DD, -1, DATEADD(QQ, DATEDIFF(QQ, 0, GETDATE()) + 1, 0))  " + Environment.NewLine +
-                        //"SELECT @quarterstartdate = DATEADD(DD, -1, DATEADD(QQ, DATEDIFF(QQ, 0, '2023-06-30') + 1, 0))  " + Environment.NewLine +
-                        "declare @prevquarterenddate datetime; " + Environment.NewLine +
-                        "SELECT @prevquarterenddate = DATEADD(MONTH, 3, DATEADD(DAY, -1, DATEADD(QUARTER, -1, DATEADD(QUARTER, DATEDIFF(QUARTER, 0, @quarterstartdate), 0))))" + Environment.NewLine +
+            string sql = $@"declare @prevquarterenddate datetime = '{prevQuarterEndDate.ToString("yyyy-MM-dd")}';" + Environment.NewLine +
                         "select * from (" + Environment.NewLine +
                         "select sym.Symbol,(select count(*) as cnt from FinancialReporting fr where fr.Symbol = sym.Symbol and fr.PeriodDate = @prevquarterenddate and fr.FinancialReportingSourceKeyID = 37) as cnt " + Environment.NewLine +
                         "from dm_asset_core_symbol sym" + Environment.NewLine +
