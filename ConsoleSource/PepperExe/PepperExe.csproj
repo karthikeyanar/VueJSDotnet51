@@ -151,6 +151,7 @@
   <ItemGroup>
     <Compile Include="ImporDealUnderlyingDirect.cs" />
     <Compile Include="DataTypeHelper.cs" />
+    <Compile Include="CalculateEMA.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

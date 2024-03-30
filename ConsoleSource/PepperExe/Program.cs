@@ -27,6 +27,7 @@ using System.Runtime.InteropServices.ComTypes;
 using System.Net;
 using static Microsoft.FSharp.Core.ByRefKinds;
 using Newtonsoft.Json;
+using System.Diagnostics;
 
 namespace PepperExe
 {
@@ -45,7 +46,7 @@ namespace PepperExe
 
         static void Main(string[] args)
         {
-            _ConnectionString = System.Configuration.ConfigurationManager.ConnectionStrings["PepperContext"].ToString(); 
+            _ConnectionString = System.Configuration.ConfigurationManager.ConnectionStrings["PepperContext"].ToString();
             bool isSkip = false; 
             if (args != null)
             {
@@ -1515,6 +1516,89 @@ namespace PepperExe
             string replacement = ""; // Replace with an empty string to remove \r\n
             string result = Regex.Replace(input, pattern, replacement);
             return result;
+        }
+
+        public static void UpdateEquityPriceHistory()
+        {
+            string rootPath = System.Configuration.ConfigurationManager.AppSettings["RootPath"];
+            string folderPath = System.IO.Path.Combine(rootPath, "equitypricehistory");
+            var files = System.IO.Directory.GetFiles(folderPath);
+            int index = 0;
+            string sql = "";
+            foreach (string file in files)
+            {
+                index += 1;
+                if (file.Contains(".csv") == true)
+                {
+                    string[] parts = file.Split('-');
+                    if (parts.Length >= 3)
+                    {
+                        string symbol = parts[2].Trim();
+                        using (TextReader reader = System.IO.File.OpenText(file))
+                        {
+                            CSVHeaderHelper csvHeader = new CSVHeaderHelper();
+                            CsvReader csv = null;
+                            csv = new CsvReader(reader);
+                            int i = 0;
+                            while (csv.Read())
+                            {
+                                i += 1;
+                                if (i == 1)
+                                {
+                                    int j;
+                                    for (j = 0; j < 100; j++)
+                                    {
+                                        try
+                                        {
+                                            csvHeader.Headers.Add(new CSVHeader { Name = csv[j], Index = j });
+                                        }
+                                        catch
+                                        {
+                                            break;
+                                        }
+                                    }
+                                }
+                                else
+                                {
+                                    for (int z = 1; z < csvHeader.Headers.Count; z++)
+                                    {
+                                        DateTime dt = DataTypeHelper.ToDateTime(csv[csvHeader.GetIndex("Date ")]);
+                                        decimal v = DataTypeHelper.ToDecimal(csv[csvHeader.GetIndex("close ")]);
+                                        if (dt.Year > 1900 && v > 0)
+                                        {
+                                            sql = $@"INSERT INTO [dbo].[EquityPriceHistory]
+                                                            ([Symbol]
+                                                            ,[Date]
+                                                            ,[Price])
+                                                        VALUES
+                                                            ('{symbol}'
+                                                            ,'{dt.ToString("yyyy-MM-dd")}'
+                                                            ,{v})";
+                                            try
+                                            {
+                                                using (SqlConnection connection = new SqlConnection(_ConnectionString))
+                                                {
+                                                    connection.Execute(sql);
+                                                }
+                                            }
+                                            catch { }
+                                        }
+                                    }
+                                }
+                                Console.WriteLine(i);
+                            }
+                        }
+                    }
+                }
+                System.IO.File.Delete(file);
+                Console.WriteLine(index + " of " + files.Length);
+            }
+        }
+
+        public static void CalculateEMACross()
+        {
+            CalculateEMA obj = new CalculateEMA(_ConnectionString, "INFY");
+            obj.Start();
         }
     }
 }

@@ -159,6 +159,9 @@ and fr.Symbol not in ('BDL')
 and fr.Symbol not in ('MAPMYINDIA')
 and fr.Symbol not in ('INDIGO')
 and fr.Symbol not in ('IIFL')
+and fr.Symbol not in ('NATIONALUM')
+and fr.Symbol not in ('NBCC')
+and fr.Symbol not in ('CGCL')
 group by fr.Symbol,sym.Industry,sym.Sector,sym.MarketCapital
 ) as tbl 
 --where tbl.CurrentShares > 0

@@ -93,7 +93,7 @@ namespace api.Controllers
             double xirr = this.XIRR(symbol, isIgnore, fromDate, toDate, isOptions, isGold);
             List<dm_asset_core_lot_share> totalSharesList = this.ListShare(symbol, isIgnore, isOptions, isGold);
             List<string> dividendSymbols = new List<string> { };//"PGINVIT-IV", "INDIGRID-IV", "RECLTD" };
-            List<string> debtSymbols = new List<string> { "LIQUIDBEES", "LIQUIDBEES-F" };
+            List<string> debtSymbols = new List<string> { };// "LIQUIDBEES", "LIQUIDBEES-F" };
             totalSharesList = (from q in totalSharesList
                                where debtSymbols.Contains(q.Symbol) == false
                                select q).ToList();
