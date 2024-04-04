@@ -1,0 +1,88 @@
+//@version=5
+indicator(title="My Strategy", overlay=true)
+
+atrPeriod = input(10, 'SuperTrend ATR Length') // 2. Change the ATR length/period (optional)  
+factor = input(3, 'SuperTrend Factor') // 3. Change the ATR factor/multiplier (optional)  
+riskvalue = input.int(1, 'SuperTrend Risk Value') // 4. Change the risk value (optional)  
+
+rsilength = input( 14 ,title = "RSI Length")
+rsioverSold = input( 30, title = "RSI Over Sold" )
+rsioverBought = input( 70 , title = "RSI Over Buy")
+price = close
+vrsi = ta.rsi(price, rsilength)
+crossover = ta.crossover(vrsi, rsioverSold)
+crossunder = ta.crossunder(vrsi, rsioverBought)
+
+long = crossover and not na(vrsi)
+short = crossunder and not na(vrsi)
+
+averageData = input.source(close, title="Average Data Source")
+
+fastLength = input.int(7, title="Fast Average Length")
+slowLength = input.int(14, title="Slow Average Length")
+
+// Calculate averages
+fastAverage = ta.ema(averageData, fastLength)
+slowAverage = ta.ema(averageData, slowLength)
+
+
+plotshape(long, style=shape.labelup, location=location.belowbar, color=color.blue, size=size.tiny, text='RSI Buy', textcolor=color.new(color.white, 0),title = "RSI Buy")      //plotting up arrow when buy/long conditions met 
+plotshape(short, style=shape.labeldown, location=location.abovebar, color=color.red, size=size.tiny, text='RSI Sell', textcolor=color.new(color.white, 0),title = "RSI Sell")  //plotting down arrow when sell/short conditions met
+
+// Plot averages
+//plot(fastAverage, color=color.orange, title="Fast SMA")
+//plot(slowAverage, color=color.yellow, title="Moving Average")
+
+// Look for moving average crosses
+crossAbove = ta.crossover(fastAverage, slowAverage)
+crossUnder = ta.crossunder(fastAverage, slowAverage)
+
+// Plot averages
+//plot(fastAverage, color=color.orange, title="Fast SMA")
+plot(slowAverage, color=color.yellow, title="Slow SMA")
+
+plotshape(crossAbove, style=shape.labelup, location=location.belowbar, color=color.blue, size=size.tiny, text='Avg Buy', textcolor=color.new(color.white, 0),title = "Avg Buy")      //plotting up arrow when buy/long conditions met 
+plotshape(crossUnder, style=shape.labeldown, location=location.abovebar, color=color.red, size=size.tiny, text='Avg Sell', textcolor=color.new(color.white, 0),title = "Avg Sell")  //plotting down arrow when sell/short conditions met
+// Highlight crosses with green and red background
+//crossColour = if crossAbove
+  //  color.new(color.green, 80)
+//else if crossUnder
+  //  color.new(color.red, 80)
+
+//bgcolor(crossColour, title="Crosses Background")
+
+[supertrend, direction] = ta.supertrend(factor, atrPeriod)
+
+bodyMiddle = plot((open + close) / 2, display=display.none)
+upTrend = plot(direction < 0 ? supertrend : na, 'Up Trend', color=color.new(color.green, 0), style=plot.style_linebr,title = "SuperTrend Up")
+downTrend = plot(direction < 0 ? na : supertrend, 'Down Trend', color=color.new(color.red, 0), style=plot.style_linebr,title = "SuperTrend Down")
+
+//fill(bodyMiddle, upTrend, color.new(color.green, 100), fillgaps=false)
+//fill(bodyMiddle, downTrend, color.new(color.red, 100), fillgaps=false)
+
+//if ta.change(direction) < 0
+    //strategy.entry('My Long Entry Id', strategy.long)
+    //alert(str.tostring(LicenseID)+',buy,' + syminfo.ticker + ',sl=' + str.tostring(supertrend) + ',risk=' + str.tostring(riskvalue), alert.freq_once_per_bar_close)
+
+//if ta.change(direction) > 0
+    //strategy.entry('My Short Entry Id', strategy.short)
+    //alert(str.tostring(LicenseID)+',sell,' + syminfo.ticker + ',sl=' + str.tostring(supertrend) + ',risk=' + str.tostring(riskvalue), alert.freq_once_per_bar_close)
+
+plotshape(ta.change(direction) < 0, style=shape.labelup, location=location.belowbar, color=color.blue, size=size.tiny, text='ST Buy', textcolor=color.new(color.white, 0),title = "ST Buy")
+plotshape(ta.change(direction) > 0, style=shape.labeldown, location=location.abovebar, color=color.red, size=size.tiny, text='ST Sell', textcolor=color.new(color.white, 0),title = "ST Sell")
+
+macdFastLength = input(12,title = "MACD Fast")
+macdSlowlength = input(26,title = "MACD Slow")
+MACDLength = input(9,"MACD Length")
+MACD = ta.ema(close, macdFastLength) - ta.ema(close, macdSlowlength)
+aMACD = ta.ema(MACD, MACDLength)
+delta = MACD - aMACD
+
+ema20 = ta.ema(close,20)
+//plot(ema20)
+
+macdlong = ta.crossover(delta, 0) and close > ema20
+macdshort = ta.crossunder(delta, 0) and close < ema20
+
+plotshape(long, style=shape.labelup, location=location.belowbar, color=color.new(#046ff9, 0), size=size.tiny, text='MACD Buy', textcolor=color.new(color.white, 0), title = "MACD Buy")      //plotting up arrow when buy/long conditions met 
+plotshape(short, style=shape.labeldown, location=location.abovebar, color=color.new(#046ff9, 0), size=size.tiny, text='MACD Sell', textcolor=color.new(color.white, 0), title = "MACD Sell")  //plotting down arrow when sell/short conditions met

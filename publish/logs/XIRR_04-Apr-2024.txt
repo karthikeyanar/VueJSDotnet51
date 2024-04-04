@@ -1,0 +1,209 @@
+04:44:34 LOG: select 
+lot.Symbol
+,case when lot.LotType = 'B' then 'Buy' else case when lot.LotType = 'S' then 'Sell' else case when lot.LotType = 'D' then 'Dividend' else case when lot.LotType = 'E' then 'Expenses' else '' end end end end as [Description]
+,lot.RecordDate as [Date]
+,case when lot.LotType = 'B'
+ then (lot.NumberOfShares * lot.SharePrice) * -1 
+ else case when lot.LotType = 'S' then (lot.NumberOfShares * lot.SharePrice) else lot.SharePrice end end [Value]
+,0 as SortOrder
+from dm_asset_core_lot lot
+ where lot.dm_asset_core_lot_id > 0 and lot.RecordDate >= '01/01/2020' and lot.LotType in ('B','S','D','E') 
+union all 
+select '' as Symbol,'Current Market Value' as [Description],[Date],sum(isnull([Value], 0)) as [Value],1 as SortOrder from (
+select Symbol as Symbol, '' as [Description], GETDATE() as [Date],[Value], 1 as SortOrder from(
+select tbl.Symbol
+,isnull(sum(isnull(tbl.Shares, 0)), 0) as CurrentShares
+,(select isnull(sum(isnull(tbl.Shares,0)),0) * (select top 1 l.SharePrice from dm_asset_core_lot l 
+where l.Symbol = tbl.Symbol
+ and l.LotType not in ('D','E')
+order by l.RecordDate desc,l.dm_asset_core_lot_id desc)) as [Value]
+from (
+select 
+lot.Symbol
+,(case when lot.LotType = 'B' then isnull(lot.NumberOfShares,0) else case when lot.LotType = 'S' then isnull(lot.NumberOfShares,0) * -1 else 0 end end) as Shares
+from dm_asset_core_lot lot
+ where lot.dm_asset_core_lot_id > 0 and lot.RecordDate >= '01/01/2020' ) as tbl 
+group by tbl.Symbol
+) as tbl2 where isnull(tbl2.CurrentShares,0) > 0
+) as tbl3 group by tbl3.[Date] order by [Date] asc
+
+04:47:14 LOG: select 
+lot.Symbol
+,case when lot.LotType = 'B' then 'Buy' else case when lot.LotType = 'S' then 'Sell' else case when lot.LotType = 'D' then 'Dividend' else case when lot.LotType = 'E' then 'Expenses' else '' end end end end as [Description]
+,lot.RecordDate as [Date]
+,case when lot.LotType = 'B'
+ then (lot.NumberOfShares * lot.SharePrice) * -1 
+ else case when lot.LotType = 'S' then (lot.NumberOfShares * lot.SharePrice) else lot.SharePrice end end [Value]
+,0 as SortOrder
+from dm_asset_core_lot lot
+ where lot.dm_asset_core_lot_id > 0 and lot.RecordDate >= '01/01/2020' and lot.LotType in ('B','S','D','E') 
+union all 
+select '' as Symbol,'Current Market Value' as [Description],[Date],sum(isnull([Value], 0)) as [Value],1 as SortOrder from (
+select Symbol as Symbol, '' as [Description], GETDATE() as [Date],[Value], 1 as SortOrder from(
+select tbl.Symbol
+,isnull(sum(isnull(tbl.Shares, 0)), 0) as CurrentShares
+,(select isnull(sum(isnull(tbl.Shares,0)),0) * (select top 1 l.SharePrice from dm_asset_core_lot l 
+where l.Symbol = tbl.Symbol
+ and l.LotType not in ('D','E')
+order by l.RecordDate desc,l.dm_asset_core_lot_id desc)) as [Value]
+from (
+select 
+lot.Symbol
+,(case when lot.LotType = 'B' then isnull(lot.NumberOfShares,0) else case when lot.LotType = 'S' then isnull(lot.NumberOfShares,0) * -1 else 0 end end) as Shares
+from dm_asset_core_lot lot
+ where lot.dm_asset_core_lot_id > 0 and lot.RecordDate >= '01/01/2020' ) as tbl 
+group by tbl.Symbol
+) as tbl2 where isnull(tbl2.CurrentShares,0) > 0
+) as tbl3 group by tbl3.[Date] order by [Date] asc
+
+
+04:47:17 LOG: select 
+lot.Symbol
+,case when lot.LotType = 'B' then 'Buy' else case when lot.LotType = 'S' then 'Sell' else case when lot.LotType = 'D' then 'Dividend' else case when lot.LotType = 'E' then 'Expenses' else '' end end end end as [Description]
+,lot.RecordDate as [Date]
+,case when lot.LotType = 'B'
+ then (lot.NumberOfShares * lot.SharePrice) * -1 
+ else case when lot.LotType = 'S' then (lot.NumberOfShares * lot.SharePrice) else lot.SharePrice end end [Value]
+,0 as SortOrder
+from dm_asset_core_lot lot
+ where lot.dm_asset_core_lot_id > 0 and lot.RecordDate >= '01/01/2020' and lot.LotType in ('B','S','D','E') 
+union all 
+select '' as Symbol,'Current Market Value' as [Description],[Date],sum(isnull([Value], 0)) as [Value],1 as SortOrder from (
+select Symbol as Symbol, '' as [Description], GETDATE() as [Date],[Value], 1 as SortOrder from(
+select tbl.Symbol
+,isnull(sum(isnull(tbl.Shares, 0)), 0) as CurrentShares
+,(select isnull(sum(isnull(tbl.Shares,0)),0) * (select top 1 l.SharePrice from dm_asset_core_lot l 
+where l.Symbol = tbl.Symbol
+ and l.LotType not in ('D','E')
+order by l.RecordDate desc,l.dm_asset_core_lot_id desc)) as [Value]
+from (
+select 
+lot.Symbol
+,(case when lot.LotType = 'B' then isnull(lot.NumberOfShares,0) else case when lot.LotType = 'S' then isnull(lot.NumberOfShares,0) * -1 else 0 end end) as Shares
+from dm_asset_core_lot lot
+ where lot.dm_asset_core_lot_id > 0 and lot.RecordDate >= '01/01/2020' ) as tbl 
+group by tbl.Symbol
+) as tbl2 where isnull(tbl2.CurrentShares,0) > 0
+) as tbl3 group by tbl3.[Date] order by [Date] asc
+
+
+05:54:37 LOG: select 
+lot.Symbol
+,case when lot.LotType = 'B' then 'Buy' else case when lot.LotType = 'S' then 'Sell' else case when lot.LotType = 'D' then 'Dividend' else case when lot.LotType = 'E' then 'Expenses' else '' end end end end as [Description]
+,lot.RecordDate as [Date]
+,case when lot.LotType = 'B'
+ then (lot.NumberOfShares * lot.SharePrice) * -1 
+ else case when lot.LotType = 'S' then (lot.NumberOfShares * lot.SharePrice) else lot.SharePrice end end [Value]
+,0 as SortOrder
+from dm_asset_core_lot lot
+ where lot.dm_asset_core_lot_id > 0 and lot.RecordDate >= '01/01/2020' and lot.LotType in ('B','S','D','E') 
+union all 
+select '' as Symbol,'Current Market Value' as [Description],[Date],sum(isnull([Value], 0)) as [Value],1 as SortOrder from (
+select Symbol as Symbol, '' as [Description], GETDATE() as [Date],[Value], 1 as SortOrder from(
+select tbl.Symbol
+,isnull(sum(isnull(tbl.Shares, 0)), 0) as CurrentShares
+,(select isnull(sum(isnull(tbl.Shares,0)),0) * (select top 1 l.SharePrice from dm_asset_core_lot l 
+where l.Symbol = tbl.Symbol
+ and l.LotType not in ('D','E')
+order by l.RecordDate desc,l.dm_asset_core_lot_id desc)) as [Value]
+from (
+select 
+lot.Symbol
+,(case when lot.LotType = 'B' then isnull(lot.NumberOfShares,0) else case when lot.LotType = 'S' then isnull(lot.NumberOfShares,0) * -1 else 0 end end) as Shares
+from dm_asset_core_lot lot
+ where lot.dm_asset_core_lot_id > 0 and lot.RecordDate >= '01/01/2020' ) as tbl 
+group by tbl.Symbol
+) as tbl2 where isnull(tbl2.CurrentShares,0) > 0
+) as tbl3 group by tbl3.[Date] order by [Date] asc
+
+
+05:55:50 LOG: select 
+lot.Symbol
+,case when lot.LotType = 'B' then 'Buy' else case when lot.LotType = 'S' then 'Sell' else case when lot.LotType = 'D' then 'Dividend' else case when lot.LotType = 'E' then 'Expenses' else '' end end end end as [Description]
+,lot.RecordDate as [Date]
+,case when lot.LotType = 'B'
+ then (lot.NumberOfShares * lot.SharePrice) * -1 
+ else case when lot.LotType = 'S' then (lot.NumberOfShares * lot.SharePrice) else lot.SharePrice end end [Value]
+,0 as SortOrder
+from dm_asset_core_lot lot
+ where lot.dm_asset_core_lot_id > 0 and lot.RecordDate >= '01/01/2020' and lot.LotType in ('B','S','D','E') 
+union all 
+select '' as Symbol,'Current Market Value' as [Description],[Date],sum(isnull([Value], 0)) as [Value],1 as SortOrder from (
+select Symbol as Symbol, '' as [Description], GETDATE() as [Date],[Value], 1 as SortOrder from(
+select tbl.Symbol
+,isnull(sum(isnull(tbl.Shares, 0)), 0) as CurrentShares
+,(select isnull(sum(isnull(tbl.Shares,0)),0) * (select top 1 l.SharePrice from dm_asset_core_lot l 
+where l.Symbol = tbl.Symbol
+ and l.LotType not in ('D','E')
+order by l.RecordDate desc,l.dm_asset_core_lot_id desc)) as [Value]
+from (
+select 
+lot.Symbol
+,(case when lot.LotType = 'B' then isnull(lot.NumberOfShares,0) else case when lot.LotType = 'S' then isnull(lot.NumberOfShares,0) * -1 else 0 end end) as Shares
+from dm_asset_core_lot lot
+ where lot.dm_asset_core_lot_id > 0 and lot.RecordDate >= '01/01/2020' ) as tbl 
+group by tbl.Symbol
+) as tbl2 where isnull(tbl2.CurrentShares,0) > 0
+) as tbl3 group by tbl3.[Date] order by [Date] asc
+
+
+06:02:04 LOG: select 
+lot.Symbol
+,case when lot.LotType = 'B' then 'Buy' else case when lot.LotType = 'S' then 'Sell' else case when lot.LotType = 'D' then 'Dividend' else case when lot.LotType = 'E' then 'Expenses' else '' end end end end as [Description]
+,lot.RecordDate as [Date]
+,case when lot.LotType = 'B'
+ then (lot.NumberOfShares * lot.SharePrice) * -1 
+ else case when lot.LotType = 'S' then (lot.NumberOfShares * lot.SharePrice) else lot.SharePrice end end [Value]
+,0 as SortOrder
+from dm_asset_core_lot lot
+ where lot.dm_asset_core_lot_id > 0 and lot.RecordDate >= '01/01/2020' and lot.LotType in ('B','S','D','E') 
+union all 
+select '' as Symbol,'Current Market Value' as [Description],[Date],sum(isnull([Value], 0)) as [Value],1 as SortOrder from (
+select Symbol as Symbol, '' as [Description], GETDATE() as [Date],[Value], 1 as SortOrder from(
+select tbl.Symbol
+,isnull(sum(isnull(tbl.Shares, 0)), 0) as CurrentShares
+,(select isnull(sum(isnull(tbl.Shares,0)),0) * (select top 1 l.SharePrice from dm_asset_core_lot l 
+where l.Symbol = tbl.Symbol
+ and l.LotType not in ('D','E')
+order by l.RecordDate desc,l.dm_asset_core_lot_id desc)) as [Value]
+from (
+select 
+lot.Symbol
+,(case when lot.LotType = 'B' then isnull(lot.NumberOfShares,0) else case when lot.LotType = 'S' then isnull(lot.NumberOfShares,0) * -1 else 0 end end) as Shares
+from dm_asset_core_lot lot
+ where lot.dm_asset_core_lot_id > 0 and lot.RecordDate >= '01/01/2020' ) as tbl 
+group by tbl.Symbol
+) as tbl2 where isnull(tbl2.CurrentShares,0) > 0
+) as tbl3 group by tbl3.[Date] order by [Date] asc
+
+
+06:02:51 LOG: select 
+lot.Symbol
+,case when lot.LotType = 'B' then 'Buy' else case when lot.LotType = 'S' then 'Sell' else case when lot.LotType = 'D' then 'Dividend' else case when lot.LotType = 'E' then 'Expenses' else '' end end end end as [Description]
+,lot.RecordDate as [Date]
+,case when lot.LotType = 'B'
+ then (lot.NumberOfShares * lot.SharePrice) * -1 
+ else case when lot.LotType = 'S' then (lot.NumberOfShares * lot.SharePrice) else lot.SharePrice end end [Value]
+,0 as SortOrder
+from dm_asset_core_lot lot
+ where lot.dm_asset_core_lot_id > 0 and lot.RecordDate >= '01/01/2020' and lot.LotType in ('B','S','D','E') 
+union all 
+select '' as Symbol,'Current Market Value' as [Description],[Date],sum(isnull([Value], 0)) as [Value],1 as SortOrder from (
+select Symbol as Symbol, '' as [Description], GETDATE() as [Date],[Value], 1 as SortOrder from(
+select tbl.Symbol
+,isnull(sum(isnull(tbl.Shares, 0)), 0) as CurrentShares
+,(select isnull(sum(isnull(tbl.Shares,0)),0) * (select top 1 l.SharePrice from dm_asset_core_lot l 
+where l.Symbol = tbl.Symbol
+ and l.LotType not in ('D','E')
+order by l.RecordDate desc,l.dm_asset_core_lot_id desc)) as [Value]
+from (
+select 
+lot.Symbol
+,(case when lot.LotType = 'B' then isnull(lot.NumberOfShares,0) else case when lot.LotType = 'S' then isnull(lot.NumberOfShares,0) * -1 else 0 end end) as Shares
+from dm_asset_core_lot lot
+ where lot.dm_asset_core_lot_id > 0 and lot.RecordDate >= '01/01/2020' ) as tbl 
+group by tbl.Symbol
+) as tbl2 where isnull(tbl2.CurrentShares,0) > 0
+) as tbl3 group by tbl3.[Date] order by [Date] asc
+
+

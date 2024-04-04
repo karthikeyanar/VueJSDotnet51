@@ -149,6 +149,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CalculateFIB.cs" />
     <Compile Include="ImporDealUnderlyingDirect.cs" />
     <Compile Include="DataTypeHelper.cs" />
     <Compile Include="CalculateEMA.cs" />

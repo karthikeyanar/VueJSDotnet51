@@ -29,7 +29,6 @@ namespace PepperExe
 
         public static void Import()
         {
-
             string sql = "";
             string rootPath = System.Configuration.ConfigurationManager.AppSettings["RootPath"];
             string updateFolder = "csv";
