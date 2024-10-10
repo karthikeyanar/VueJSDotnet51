@@ -46,7 +46,7 @@ namespace PepperExe
 
         static void Main(string[] args)
         {
-            _ConnectionString = System.Configuration.ConfigurationManager.ConnectionStrings["PepperContext"].ToString();
+            _ConnectionString = System.Configuration.ConfigurationManager.ConnectionStrings["PepperContext"].ToString(); 
             bool isSkip = false; 
             if (args != null)
             {
@@ -148,6 +148,246 @@ namespace PepperExe
         }
 
         public static void UpdatePrice()
+        {
+            string rootPath = System.Configuration.ConfigurationManager.AppSettings["RootPath"];
+            string credentialPath = System.IO.Path.Combine(rootPath, "credentials.json");
+            UserCredential credential;
+            string googleSheetId = "";// System.Configuration.ConfigurationManager.AppSettings["googlesheetid"];
+            using (var stream =
+                new FileStream(credentialPath, FileMode.Open, FileAccess.Read))
+            {
+                // The file token.json stores the user's access and refresh tokens, and is created
+                // automatically when the authorization flow completes for the first time.
+                string credPath = System.IO.Path.Combine(rootPath, "token.json");
+                credential = GoogleWebAuthorizationBroker.AuthorizeAsync(
+                    GoogleClientSecrets.Load(stream).Secrets,
+                    Scopes,
+                    "user",
+                    CancellationToken.None,
+                    new FileDataStore(credPath, true)).Result;
+                Helper.Log("Credential file saved to: " + credPath);
+            }
+
+            // Create Google Sheets API service.
+            var service = new SheetsService(new BaseClientService.Initializer()
+            {
+                HttpClientInitializer = credential,
+                ApplicationName = ApplicationName,
+            });
+
+            string exchangeName = "NSE";
+            int i = 0;
+            int interVal = DataTypeHelper.ToInt32(System.Configuration.ConfigurationManager.AppSettings["Interval"].ToString());
+            string fromDate = System.Configuration.ConfigurationManager.AppSettings["Interval_From_Date"].ToString();
+            string toDate = System.Configuration.ConfigurationManager.AppSettings["Interval_To_Date"].ToString();
+            string connectionString = System.Configuration.ConfigurationManager.ConnectionStrings["PepperContext"].ToString();
+            string fromText = $@"TODAY()-{interVal}";
+            fromText = "\"" + fromText + "\"";
+            string toText = "\"TODAY()\"";
+            if (string.IsNullOrEmpty(fromDate) == false)
+            {
+                fromText = fromDate;
+            }
+            if (string.IsNullOrEmpty(toDate) == false)
+            {
+                toText = toDate;
+            }
+
+            List<string> symbols = new List<string>();
+            i = 0;
+            DateTime endDate = DateTime.Now.Date.AddDays(-1);
+            Helper.Log("endDate=" + endDate.ToString("dd/MMM/yyyy"));
+            string sql = $@"select s.symbol from dm_asset_core_lot_share s
+                        left outer join dm_asset_core_lot l2 on l2.Symbol = s.Symbol and l2.RecordDate = '{endDate.ToString("MM/dd/yyyy")}' and l2.LotType = 'P'
+                        where s.NumberOfShares > 0 
+                        and l2.dm_asset_core_lot_id is null 
+                        and s.symbol not in ('PGINVIT')
+                        group by s.symbol 
+                        order by s.symbol";
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            {
+                symbols = connection.Query<string>(sql).ToList();
+            }
+            symbols.Add("NIFTY_50");
+            foreach (string symbol in symbols)
+            {
+                try
+                {
+                    i += 1;
+                    // TODO: Assign values to desired properties of `requestBody`:
+                    Google.Apis.Sheets.v4.Data.Spreadsheet body = new Google.Apis.Sheets.v4.Data.Spreadsheet();
+                    body.Properties = new SpreadsheetProperties();
+                    body.Properties.Title = "GoogleFinanceCheck";
+
+                    // Add Temp Sheet
+                    body.Sheets = new List<Sheet>();
+
+                    Sheet sheet = new Sheet();
+                    sheet.Properties = new SheetProperties();
+                    sheet.Properties.Title = "Sheet1";
+                    sheet.Properties.GridProperties = new GridProperties();
+                    int columnCount = 3;
+                    int rowCount = 1000;
+                    sheet.Properties.GridProperties.ColumnCount = columnCount;
+                    sheet.Properties.GridProperties.RowCount = rowCount;
+                    //sheet.Properties.GridProperties.FrozenRowCount = 1;
+
+                    sheet.Data = new List<Google.Apis.Sheets.v4.Data.GridData>();
+                    Google.Apis.Sheets.v4.Data.GridData gd = new Google.Apis.Sheets.v4.Data.GridData();
+                    List<RowData> rows = new List<RowData>();
+                    RowData row = null;
+                    exchangeName = "NSE";
+                    if(symbol == "NIFTY_50")
+                    {
+                        exchangeName = "INDEXNSE";
+                    }
+
+                    DateTime date = GetLastPriceDate(symbol);
+                    fromText = $"DATE({date.Year}, {date.Month}, {date.Day})";
+
+                    date = DateTime.Now.Date;
+                    toText = $"DATE({date.Year}, {date.Month}, {date.Day})";
+
+                    string formula = $@"=GOOGLEFINANCE(""{exchangeName}:{symbol}"", ""close"",  {fromText}, {toText}, ""DAILY"")";
+                    row = new RowData
+                    {
+                        Values = new List<CellData>()
+                    };
+                    row.Values.Add(new CellData
+                    {
+                        UserEnteredValue = new ExtendedValue { FormulaValue = formula }
+                    });
+                    rows.Add(row);
+                    //=GOOGLEFINANCE("INDEXNSE:NIFTY_50", "close", TODAY()-180, TODAY(), "DAILY")
+                    //int index = 1;
+                    //foreach (string sym in symbols)
+                    //{
+                    //    string symbol = sym;
+                    //    switch (symbol)
+                    //    {
+                    //        case "NEWGEN-BE":
+                    //            symbol = "NEWGEN";
+                    //            break;
+                    //    }
+                    //    index += 1;
+                    //    row = new RowData
+                    //    {
+                    //        Values = new List<CellData>()
+                    //    };
+                    //    row.Values.Add(new CellData
+                    //    {
+                    //        UserEnteredValue = new ExtendedValue { StringValue = symbol }
+                    //    });
+                    //    //=INDEX(GoogleFinance("NASDAQ:GOOGL", "close", WORKDAY(TODAY(),-2)),2,2)
+                    //    formula = string.Format("=C{0} + (C{0} * GOOGLEFINANCE(\"{1}:\"&A{0},\"changepct\")) / 100", index, exchangeName);
+                    //    //formula = string.Format("=GOOGLEFINANCE(\"{0}{1}\",\"price\",{2},{3},\"DAILY\")", "=A1", startDate, endDate);
+                    //    row.Values.Add(new CellData
+                    //    {
+                    //        UserEnteredValue = new ExtendedValue { FormulaValue = formula }
+                    //    });
+
+                    //    formula = string.Format("=GoogleFinance(\"{0}:{1}\", \"price\")", exchangeName, symbol);
+                    //    row.Values.Add(new CellData
+                    //    {
+                    //        UserEnteredValue = new ExtendedValue { FormulaValue = formula }
+                    //    });
+                    //    rows.Add(row);
+                    //}
+
+                    gd.RowData = rows;
+                    sheet.Data.Add(gd);
+                    body.Sheets.Add(sheet);
+
+                    SpreadsheetsResource.CreateRequest request = service.Spreadsheets.Create(body);
+
+                    // To execute asynchronously in an async method, replace `request.Execute()` as shown:
+                    Google.Apis.Sheets.v4.Data.Spreadsheet response = request.Execute();
+                    // Data.Spreadsheet response = await request.ExecuteAsync();
+                    //Helper.Log(JsonConvert.SerializeObject(response));
+                    googleSheetId = response.SpreadsheetId; //"1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms";
+
+
+                    Helper.Log("Sheet created symbol=" + symbol + " " + i + " of " + symbols.Count);
+                    Thread.Sleep(10000);
+                    Helper.Log("Sheet created symbol=" + symbol + " formula=" + formula);
+                    //System.Threading.Thread.Sleep((1000*10));
+                    // Read sheet
+                    // Define request parameters.
+                    string range = "A1:C10000";
+                    SpreadsheetsResource.ValuesResource.GetRequest readRequest = service.Spreadsheets.Values.Get(googleSheetId, range);
+                    // Prints the names and majors of students in a sample spreadsheet:
+                    // https://docs.google.com/spreadsheets/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/edit
+                    ValueRange valueResponse = readRequest.Execute();
+                    IList<IList<Object>> values = valueResponse.Values;
+                    if (values != null && values.Count > 0)
+                    {
+                        //Helper.Log("Symbol,Yesterday,Today");
+                        foreach (var sv in values)
+                        {
+                            if (sv[0].ToString() != "Date")
+                            {
+                                try
+                                {
+                                    date = DataTypeHelper.ToDateTime(sv[0].ToString());
+                                    decimal price = DataTypeHelper.ToDecimal(sv[1].ToString());
+                                    if (date.Year > 1900)
+                                    {
+                                        ImportDealUnderlyingDirect.CreateAssetCore(symbol, date.Date, 0, price, "0", "P");
+                                    }
+                                }
+                                catch { }
+                            }
+                            //if (yesterdayPrice > 0)
+                            //{
+                            //    ImportDealUnderlyingDirect.CreateAssetCore(symbol, DateTime.Now.Date.AddDays(-1), 0, yesterdayPrice, "0", "P");
+                            //}
+                            //if (todayPrice > 0)
+                            //{
+                            //    ImportDealUnderlyingDirect.CreateAssetCore(symbol, DateTime.Now.Date, 0, todayPrice, "0", "P");
+                            //}
+                            //Helper.Log(symbol + "," + yesterdayPrice.ToString() + "," + todayPrice);
+                        }
+                    }
+                    else
+                    {
+                        Helper.Log("No data found.");
+                    }
+                    // Create the DriveService object
+                    DriveService driveservice = new DriveService(new BaseClientService.Initializer()
+                    {
+                        HttpClientInitializer = credential,
+                        ApplicationName = "AppName"
+                    });
+                    // Call the DriveService.Files.Delete method to delete the spreadsheet
+                    driveservice.Files.Delete(googleSheetId).Execute();
+                    Thread.Sleep(10000);
+                }
+                catch { }
+            }
+        }
+
+
+        public static DateTime GetLastPriceDate(string symbol)
+        {
+            string connectionString = System.Configuration.ConfigurationManager.ConnectionStrings["PepperContext"].ToString();
+			string targetSymbol = symbol;
+			if (targetSymbol == "NIFTY_50")
+			{
+				targetSymbol = "NIFTY";
+			}
+			string sql = $@"select top 1 RecordDate from dm_asset_core_lot where LotType in ('P','B') and Symbol = @targetsymbol order by RecordDate desc";
+			DateTime lastPriceDate = DateTime.MinValue;
+			using (SqlConnection connection = new SqlConnection(connectionString))
+			{
+				lastPriceDate = connection.Query<DateTime>(sql, new
+				{
+					targetsymbol = targetSymbol
+				}).FirstOrDefault();
+			}
+			return lastPriceDate;
+		}
+      
+        public static void UpdatePriceOld()
         {
             string rootPath = System.Configuration.ConfigurationManager.AppSettings["RootPath"];
             string credentialPath = System.IO.Path.Combine(rootPath, "credentials.json");
@@ -664,9 +904,10 @@ namespace PepperExe
                 {
                     UserEnteredValue = new ExtendedValue { StringValue = "Each" }
                 });
+                formula = "=$V$1/50";
                 row.Values.Add(new CellData
                 {
-                    UserEnteredValue = new ExtendedValue { NumberValue = 14500 }
+                    UserEnteredValue = new ExtendedValue { FormulaValue = formula }
                 });
                 row.Values.Add(new CellData
                 {
@@ -794,13 +1035,19 @@ namespace PepperExe
                             UserEnteredValue = new ExtendedValue { FormulaValue = formula }
                         });
                         
-                        formula = $@"=$T$1-{col2}{(i+2)}";
+                        formula = $@"=$T$1-{col1}{(i+2)}";
                         row.Values.Add(new CellData
                         {
                             UserEnteredValue = new ExtendedValue { FormulaValue = formula }
                         });
 
                         formula = $@"=K{(i+2)}/F{(i+2)}";
+                        row.Values.Add(new CellData
+                        {
+                            UserEnteredValue = new ExtendedValue { FormulaValue = formula }
+                        });
+
+                        formula = $@"=E{(i+2)}/$V$1";
                         row.Values.Add(new CellData
                         {
                             UserEnteredValue = new ExtendedValue { FormulaValue = formula }

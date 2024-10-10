@@ -1,0 +1,9 @@
+06:41:44 LOG: select
+ lot.* from dm_asset_core_lot lot
+ where lot.dm_asset_core_lot_id > 0
+ and lot.RecordDate >= '01/01/2020' 
+
+ order by lot.RecordDate desc,lot.dm_asset_core_lot_id desc 
+ OFFSET (0) * 20 ROWS 
+ FETCH NEXT 20 ROWS ONLY
+

@@ -42,7 +42,7 @@
 					Amount<input type="number" class="form-control" v-model="allocationAmount" v-on:change="loadAllocation" placeholder="Allocation Amount" />
 				</div>
 				<div class="float-start mt-2" style="width:auto;margin-left:25px;">
-					<input type="checkbox" v-model="isShowAllocation" v-on:change="loadAllocation" />&nbsp;Allocation
+					<input type="checkbox" v-model="isShowAllocation" v-on:change="isTransaction=false;loadAllocation()" />&nbsp;Allocation
 				</div><div class="clearfix">&nbsp;</div><br/>
 			</div>
 			<div class="col-4">
