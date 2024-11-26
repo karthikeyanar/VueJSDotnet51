@@ -346,7 +346,7 @@ namespace api.Controllers
             return list;
         }
 
-        [HttpDelete]
+        [HttpGet]
         public dynamic Delete(int id)
         {
             string sql = "delete from [dbo].[dm_asset_core_lot]" + Environment.NewLine +

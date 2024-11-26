@@ -1,0 +1,64 @@
+04:00:01 LOG: select
+ lot.* from dm_asset_core_lot lot
+ where lot.dm_asset_core_lot_id > 0
+ and lot.RecordDate >= '01/01/2020' 
+
+ order by lot.RecordDate desc,lot.dm_asset_core_lot_id desc 
+ OFFSET (0) * 20 ROWS 
+ FETCH NEXT 20 ROWS ONLY
+
+04:00:09 LOG: select
+ lot.* from dm_asset_core_lot lot
+ where lot.dm_asset_core_lot_id > 0
+ and lot.RecordDate >= '01/01/2020' 
+ and lot.Symbol in ('PGINVIT')
+
+ order by lot.RecordDate desc,lot.dm_asset_core_lot_id desc 
+ OFFSET (0) * 20 ROWS 
+ FETCH NEXT 20 ROWS ONLY
+
+
+04:05:08 LOG: select
+ lot.* from dm_asset_core_lot lot
+ where lot.dm_asset_core_lot_id > 0
+ and lot.RecordDate >= '01/01/2020' 
+
+ order by lot.RecordDate desc,lot.dm_asset_core_lot_id desc 
+ OFFSET (0) * 20 ROWS 
+ FETCH NEXT 20 ROWS ONLY
+
+
+04:05:18 LOG: select
+ lot.* from dm_asset_core_lot lot
+ where lot.dm_asset_core_lot_id > 0
+ and lot.RecordDate >= '01/01/2020' 
+ and lot.Symbol in ('PGINVIT')
+
+ order by lot.RecordDate desc,lot.dm_asset_core_lot_id desc 
+ OFFSET (0) * 20 ROWS 
+ FETCH NEXT 20 ROWS ONLY
+
+
+04:05:39 LOG: select
+ lot.* from dm_asset_core_lot lot
+ where lot.dm_asset_core_lot_id > 0
+ and lot.RecordDate >= '01/01/2020' 
+ and lot.Symbol in ('PGINVIT')
+ and lot.LotType in ('P')
+
+ order by lot.RecordDate desc,lot.dm_asset_core_lot_id desc 
+ OFFSET (0) * 20 ROWS 
+ FETCH NEXT 20 ROWS ONLY
+
+
+04:05:52 LOG: select
+ lot.* from dm_asset_core_lot lot
+ where lot.dm_asset_core_lot_id > 0
+ and lot.RecordDate >= '01/01/2020' 
+ and lot.Symbol in ('PGINVIT')
+
+ order by lot.RecordDate desc,lot.dm_asset_core_lot_id desc 
+ OFFSET (0) * 20 ROWS 
+ FETCH NEXT 20 ROWS ONLY
+
+

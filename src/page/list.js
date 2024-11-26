@@ -16,7 +16,7 @@ export default {
                 'isIgnore': false,
                 'isOptions': false,
                 'isGold': false,
-                'tradeType':''
+                'tradeType': ''
             },
             listSearch: {
                 'sortName': 'PL',
@@ -25,7 +25,7 @@ export default {
             isTransaction: false,
             newjson: null,
             rows: [],
-            shares:[],
+            shares: [],
             xirr: 0,
             totalCapitalCall: 0,
             totalDividendCall: 0,
@@ -33,16 +33,16 @@ export default {
             totalStrategyCall: 0,
             totalOptionsCall: 0,
             totalDebtCall: 0,
-            totalGold:0,
+            totalGold: 0,
             totalPL: 0,
             totalUnRealizedPL: 0,
             totalPLPercent: 0,
             totalUnRealizedPLPercent: 0,
-            currentMarketValue:0,
-            allocationAmount:0,
+            currentMarketValue: 0,
+            allocationAmount: 0,
             allocationList: [],
             isShowAllocation: false,
-            indexList:[]
+            indexList: []
         }
     },
     methods: {
@@ -111,7 +111,7 @@ export default {
                     console.log("error=", error);
                 },
             });
-        }, 
+        },
         loadShares: function () {
             var self = this;
             var json = JSON.parse(JSON.stringify(self.search));
@@ -143,8 +143,8 @@ export default {
                     //window.location.href = '/login';
                 },
                 onSuccess: function (result) {
-                     self.allocationList = result;
-                     if(callback)
+                    self.allocationList = result;
+                    if (callback)
                         callback();
                 },
                 onError: function (error) {
@@ -176,7 +176,7 @@ export default {
                 row.IsSaving = true;
                 helper.ajax({
                     url: "api/Home/Delete",
-                    method: "DELETE",
+                    method: "GET",
                     data: data,
                     onUnAuthorized: function () {
                         console.log("onUnAuthorized");
